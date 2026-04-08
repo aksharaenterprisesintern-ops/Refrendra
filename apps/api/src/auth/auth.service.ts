@@ -1,24 +1,91 @@
-import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClient } from '@refhire/db';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import { ObjectId } from 'bson';
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaClient,
-    private jwtService: JwtService, 
-    private config: ConfigService
+    private jwtService: JwtService,
+    private config: ConfigService,
   ) {}
 
-  /* ─── ADMIN & USER: Password-based login ─── */
+  private formatRawValue(val: any): any {
+    if (val instanceof Date) {
+      return { $date: val.toISOString() };
+    }
+    if (val instanceof ObjectId) {
+      return { $oid: val.toHexString() };
+    }
+    if (Array.isArray(val)) {
+      return val.map((item) => this.formatRawValue(item));
+    }
+    if (val !== null && typeof val === 'object') {
+      const newObj: Record<string, any> = {};
+      for (const key of Object.keys(val)) {
+        newObj[key] = this.formatRawValue(val[key]);
+      }
+      return newObj;
+    }
+    return val;
+  }
+
+  private async rawInsert(collection: string, doc: Record<string, any>) {
+    const _id = new ObjectId();
+    const formattedDoc = this.formatRawValue(doc);
+
+    const result = await (this.prisma as any).$runCommandRaw({
+      insert: collection,
+      documents: [
+        {
+          _id: { $oid: _id.toHexString() },
+          ...formattedDoc,
+        },
+      ],
+    });
+
+    if (result.ok !== 1) {
+      throw new Error(`Raw insert into ${collection} failed: ${JSON.stringify(result)}`);
+    }
+
+    return _id.toHexString();
+  }
+
+  private async rawUpdateMany(
+    collection: string,
+    where: Record<string, any>,
+    setData: Record<string, any>,
+  ) {
+    const result = await (this.prisma as any).$runCommandRaw({
+      update: collection,
+      updates: [
+        {
+          q: this.formatRawValue(where),
+          u: { $set: this.formatRawValue(setData) },
+          multi: true,
+        },
+      ],
+    });
+
+    if (result.ok !== 1) {
+      throw new Error(`Raw update in ${collection} failed: ${JSON.stringify(result)}`);
+    }
+  }
+
   async validateUser(email: string, pass: string) {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user || !user.passwordHash) return null;
-    
-    // Check if verified
+
     if (!user.isVerified) {
       throw new UnauthorizedException('Please verify your email before logging in.');
     }
@@ -28,55 +95,83 @@ export class AuthService {
       const { passwordHash, otp, otpExpiry, ...result } = user;
       return result;
     }
+
     return null;
   }
 
-  /* ─── USER SIGNUP: collects data and sends OTP ─── */
   async registerUser(data: { name: string; email: string; phone: string; password?: string }) {
-    const existing = await this.prisma.user.findUnique({ where: { email: data.email } });
-    if (existing) {
-      if (existing.isVerified) {
+    try {
+      console.log('--- Registration Start ---', data.email);
+      const existing = await this.prisma.user.findUnique({ where: { email: data.email } });
+
+      if (existing && existing.isVerified) {
         throw new ConflictException('An account with this email already exists.');
       }
-      // If user exists but not verified, we'll just update it and re-send OTP
+
+      const passwordHash = data.password ? await bcrypt.hash(data.password, 10) : null;
+
+      const count = await this.prisma.user.count();
+      const employeeId = `EMP-${String(count + 1).padStart(4, '0')}`;
+
+      let user;
+      if (existing) {
+        await this.rawUpdateMany(
+          'User',
+          { email: data.email },
+          {
+            name: data.name,
+            phone: data.phone,
+            passwordHash,
+            isVerified: false,
+          },
+        );
+
+        user = await this.prisma.user.findUnique({ where: { email: data.email } });
+      } else {
+        const now = new Date();
+        await this.rawInsert('User', {
+          email: data.email,
+          name: data.name,
+          phone: data.phone,
+          passwordHash,
+          isVerified: false,
+          employeeId,
+          role: 'CLUB_HEADER',
+          createdAt: now,
+        });
+
+        user = await this.prisma.user.findUnique({ where: { email: data.email } });
+      }
+
+      if (!user) {
+        throw new Error('User creation failed - could not retrieve user after insert.');
+      }
+
+      const otpResult = await this.sendOtp(user.email);
+
+      return {
+        message: 'OTP sent for verification',
+        email: user.email,
+        name: user.name,
+        ...otpResult,
+      };
+    } catch (e: any) {
+      if (e.status) throw e;
+
+      console.error('CRITICAL Registration Error:', e.stack || e);
+      try {
+        require('fs').appendFileSync(
+          'auth_error.log',
+          `[REGISTRATION] ${new Date().toISOString()}\n${e.stack || e}\n\n`,
+        );
+      } catch {
+        // no-op
+      }
+
+      throw new InternalServerErrorException(`Registration failed: ${e.message}`);
     }
-
-    const passwordHash = data.password ? await bcrypt.hash(data.password, 10) : null;
-    
-    // Auto-generate an employee ID
-    const count = await this.prisma.user.count();
-    const employeeId = `EMP-${String(count + 1).padStart(4, '0')}`;
-
-    const user = await this.prisma.user.upsert({
-      where: { email: data.email },
-      update: {
-        name: data.name,
-        phone: data.phone,
-        passwordHash,
-        isVerified: false,
-      },
-      create: {
-        email: data.email,
-        phone: data.phone,
-        name: data.name,
-        employeeId,
-        passwordHash,
-        role: 'EMPLOYEE',
-        isVerified: false,
-      },
-    });
-
-    // Send the verification OTP
-    await this.sendOtp(user.email);
-
-    return { 
-      message: 'OTP sent for verification', 
-      email: user.email, 
-      name: user.name 
-    };
   }
 
-  /* ─── SHARED: Send OTP for Verification/Login ─── */
   async sendOtp(email: string) {
     if (!email || !email.includes('@')) {
       throw new BadRequestException('Invalid email address.');
@@ -87,7 +182,6 @@ export class AuthService {
       throw new BadRequestException('No account found for this email.');
     }
 
-    // Rate limit: check if OTP was sent less than 30 seconds ago
     const recentOtp = await this.prisma.otpVerification.findFirst({
       where: {
         email,
@@ -103,25 +197,23 @@ export class AuthService {
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpHash = await bcrypt.hash(otp, 10);
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
-    await this.prisma.otpVerification.updateMany({
-      where: { email, used: false },
-      data: { used: true },
+    await this.rawUpdateMany('OtpVerification', { email, used: false }, { used: true });
+
+    await this.rawInsert('OtpVerification', {
+      email,
+      otpHash,
+      expiresAt,
+      attempts: 0,
+      used: false,
+      createdAt: new Date(),
     });
 
-    await this.prisma.otpVerification.create({
-      data: { email, otpHash, expiresAt },
-    });
+    await this.rawUpdateMany('User', { email }, { otp, otpExpiry: expiresAt });
 
-    await this.prisma.user.update({
-      where: { email },
-      data: { otp, otpExpiry: expiresAt },
-    });
+    console.log(`\nOTP for ${email}: ${otp}\n`);
 
-    console.log(`\n📧 OTP for ${email}: ${otp}\n`);
-
-    // REAL SMTP
     const smtpUser = this.config.get<string>('SMTP_USER');
     const smtpPass = this.config.get<string>('SMTP_PASS');
     const smtpHost = this.config.get<string>('SMTP_HOST');
@@ -143,6 +235,7 @@ export class AuthService {
           subject: 'Verify your Refentra Account',
           html: this.createEmailTemplate(otp),
         });
+
         return { success: true, message: 'OTP sent to your email.' };
       } catch (err: any) {
         console.error('SMTP Error:', err.message);
@@ -150,7 +243,6 @@ export class AuthService {
       }
     }
 
-    // ETHEREAL FALLBACK
     try {
       const testAccount = await nodemailer.createTestAccount();
       const transporter = nodemailer.createTransport({
@@ -161,20 +253,29 @@ export class AuthService {
       });
 
       const info = await transporter.sendMail({
-          from: '"Refentra Dev-Mode" <no-reply@ethereal.email>',
-          to: email,
-          subject: 'Verify your Refentra Account',
-          html: this.createEmailTemplate(otp),
+        from: '"Refentra Dev-Mode" <no-reply@ethereal.email>',
+        to: email,
+        subject: 'Verify your Refentra Account',
+        html: this.createEmailTemplate(otp),
       });
 
-      return { 
-        demo: true, 
-        otp, 
-        previewUrl: nodemailer.getTestMessageUrl(info), 
-        message: `OTP [${otp}] sent via Ethereal.` 
+      return {
+        demo: true,
+        otp,
+        previewUrl: nodemailer.getTestMessageUrl(info),
+        message: `OTP [${otp}] sent via Ethereal.`,
       };
     } catch (err: any) {
-      return { demo: true, otp, message: 'OTP (Console): ' + otp };
+      try {
+        require('fs').appendFileSync(
+          'auth_error.log',
+          `[SEND_OTP_ETHEREAL] ${new Date().toISOString()}\n${err.stack || err}\n\n`,
+        );
+      } catch {
+        // no-op
+      }
+
+      return { demo: true, otp, message: `OTP (Console): ${otp}` };
     }
   }
 
@@ -191,7 +292,6 @@ export class AuthService {
     `;
   }
 
-  /* ─── VERIFY OTP: Activates user and logs them in ─── */
   async verifyOtp(email: string, otp: string) {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) throw new UnauthorizedException('Invalid identifier.');
@@ -208,33 +308,23 @@ export class AuthService {
     const isMatch = await bcrypt.compare(otp, otpRecord.otpHash);
     if (!isMatch) throw new UnauthorizedException('Invalid OTP.');
 
-    // Activate the user
-    await this.prisma.user.update({
-      where: { email },
-      data: { isVerified: true, otp: null, otpExpiry: null },
-    });
+    await this.rawUpdateMany('User', { email }, { isVerified: true, otp: null, otpExpiry: null });
+    await this.rawUpdateMany('OtpVerification', { _id: new ObjectId(otpRecord.id) }, { used: true });
 
-    await this.prisma.otpVerification.update({
-      where: { id: otpRecord.id },
-      data: { used: true },
-    });
-
-    // Generate JWT
     const payload = { sub: user.id, role: user.role, email: user.email };
     return {
       accessToken: this.jwtService.sign(payload),
       refreshToken: this.jwtService.sign(payload, { expiresIn: '7d' } as any),
-      user: { 
-        id: user.id, 
-        email: user.email, 
-        name: user.name, 
-        role: user.role, 
-        isVerified: true 
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        isVerified: true,
       },
     };
   }
 
-  /* ─── FINAL LOGIN RESPONSE ─── */
   async adminLogin(user: any) {
     const payload = { sub: user.userId || user.id, role: user.role, email: user.email };
     return {

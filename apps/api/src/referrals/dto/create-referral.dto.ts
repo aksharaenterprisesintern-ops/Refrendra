@@ -18,8 +18,8 @@ export class CreateReferralDto {
 
   @ApiProperty({ example: 'pos_cuid_123' })
   @IsString()
-  @IsNotEmpty()
-  positionId: string;
+  @IsOptional()
+  positionId?: string;
 
   @ApiProperty({ example: 'A strong full-stack candidate.', required: false })
   @IsString()

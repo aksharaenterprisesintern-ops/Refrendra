@@ -4,6 +4,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import * as express from 'express';
 import { ExpressAdapter } from '@nestjs/platform-express';
+import { join } from 'path';
 
 const server = express();
 let cachedApp: any;
@@ -19,6 +20,7 @@ export const createServer = async (expressInstance: any) => {
   
   app.setGlobalPrefix('api');
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  expressInstance.use('/uploads', express.static(join(process.cwd(), 'uploads')));
   
   app.enableCors({
     origin: (origin, callback) => {

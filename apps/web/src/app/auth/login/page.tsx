@@ -46,7 +46,10 @@ export default function UserLoginPage() {
           <div className="flex items-center gap-2 group cursor-pointer" onClick={() => router.push('/')}>
             <span className="text-[#1A1A1A] text-2xl font-black tracking-tighter uppercase">Platform</span>
           </div>
-          <button className="border border-[#1A1A1A]/10 px-4 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase hover:bg-black hover:text-white transition-all">
+          <button 
+            onClick={() => router.push('/auth/register')}
+            className="border border-[#1A1A1A]/10 px-4 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase hover:bg-black hover:text-white transition-all"
+          >
             Join Cluster
           </button>
         </header>
@@ -107,7 +110,12 @@ export default function UserLoginPage() {
             </button>
 
             <p className="text-center text-[10px] font-bold tracking-[0.1em] uppercase text-[#1A1A1A]/30">
-              Don't have an account? <span className="text-[#8B1414] hover:underline cursor-pointer">Sign Up</span>
+              Don't have an account? <span 
+                onClick={() => router.push('/auth/register')}
+                className="text-[#8B1414] hover:underline cursor-pointer"
+              >
+                Sign Up
+              </span>
             </p>
           </form>
         </main>

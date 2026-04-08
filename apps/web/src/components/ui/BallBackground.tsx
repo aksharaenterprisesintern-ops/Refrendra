@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 
 const SPICED_COLORS = [
@@ -11,39 +12,53 @@ const SPICED_COLORS = [
 ];
 
 export default function BallBackground() {
+  const blobs = useMemo(
+    () =>
+      Array.from({ length: 10 }, (_, i) => {
+        const startX = Math.random() * 80 + 10;
+        const startY = Math.random() * 80 + 10;
+        const deltaX = Math.random() * 16 - 8;
+        const deltaY = Math.random() * 16 - 8;
+        const size = Math.random() * 220 + 240;
+        const opacity = 0.14 + Math.random() * 0.12;
+        const duration = 32 + Math.random() * 12;
+
+        return {
+          id: i,
+          color: SPICED_COLORS[i % SPICED_COLORS.length],
+          width: `${size}px`,
+          height: `${size}px`,
+          opacity,
+          scale: 0.86 + Math.random() * 0.24,
+          x: [`${startX}%`, `${startX + deltaX}%`, `${startX}%`],
+          y: [`${startY}%`, `${startY + deltaY}%`, `${startY}%`],
+          duration,
+        };
+      }),
+    [],
+  );
+
   return (
-    <div className="fixed inset-0 -z-10 bg-[#E8E3CF] overflow-hidden">
-      {[...Array(12)].map((_, i) => (
+    <div className="fixed inset-0 -z-10 bg-[#E8E3CF] overflow-hidden pointer-events-none">
+      {blobs.map((blob) => (
         <motion.div
-          key={i}
-          initial={{
-            x: Math.random() * 100 + '%',
-            y: Math.random() * 100 + '%',
-            scale: Math.random() * 0.5 + 0.5,
-            opacity: 0.2 + Math.random() * 0.3,
-          }}
+          key={blob.id}
+          initial={{ x: blob.x[0], y: blob.y[0], scale: blob.scale, opacity: blob.opacity }}
           animate={{
-            x: [
-              Math.random() * 100 + '%',
-              Math.random() * 100 + '%',
-              Math.random() * 100 + '%',
-            ],
-            y: [
-              Math.random() * 100 + '%',
-              Math.random() * 100 + '%',
-              Math.random() * 100 + '%',
-            ],
+            x: blob.x,
+            y: blob.y,
           }}
           transition={{
-            duration: 20 + Math.random() * 10,
+            duration: blob.duration,
             repeat: Infinity,
-            ease: "linear",
+            repeatType: 'mirror',
+            ease: 'easeInOut',
           }}
-          className="absolute rounded-full blur-[80px]"
+          className="absolute rounded-full blur-[96px] will-change-transform transform-gpu"
           style={{
-            backgroundColor: SPICED_COLORS[i % SPICED_COLORS.length],
-            width: Math.random() * 300 + 200 + 'px',
-            height: Math.random() * 300 + 200 + 'px',
+            backgroundColor: blob.color,
+            width: blob.width,
+            height: blob.height,
           }}
         />
       ))}

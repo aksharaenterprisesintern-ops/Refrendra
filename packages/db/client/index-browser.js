@@ -115,13 +115,6 @@ Prisma.NullTypes = {
  * Enums
  */
 
-exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
-  ReadUncommitted: 'ReadUncommitted',
-  ReadCommitted: 'ReadCommitted',
-  RepeatableRead: 'RepeatableRead',
-  Serializable: 'Serializable'
-});
-
 exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
   email: 'email',
@@ -134,7 +127,12 @@ exports.Prisma.UserScalarFieldEnum = {
   isVerified: 'isVerified',
   otp: 'otp',
   otpExpiry: 'otpExpiry',
-  createdAt: 'createdAt'
+  college: 'college',
+  gradYear: 'gradYear',
+  bio: 'bio',
+  location: 'location',
+  createdAt: 'createdAt',
+  referredById: 'referredById'
 };
 
 exports.Prisma.OtpVerificationScalarFieldEnum = {
@@ -165,6 +163,10 @@ exports.Prisma.ReferralScalarFieldEnum = {
   candidatePhone: 'candidatePhone',
   resumeUrl: 'resumeUrl',
   notes: 'notes',
+  college: 'college',
+  gradYear: 'gradYear',
+  bio: 'bio',
+  location: 'location',
   status: 'status',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
@@ -199,15 +201,11 @@ exports.Prisma.QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
 };
-
-exports.Prisma.NullsOrder = {
-  first: 'first',
-  last: 'last'
-};
 exports.Role = exports.$Enums.Role = {
   EMPLOYEE: 'EMPLOYEE',
   ADMIN: 'ADMIN',
-  HR: 'HR'
+  HR: 'HR',
+  CLUB_HEADER: 'CLUB_HEADER'
 };
 
 exports.ReferralStatus = exports.$Enums.ReferralStatus = {

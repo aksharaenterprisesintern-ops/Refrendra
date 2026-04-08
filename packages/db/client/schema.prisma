@@ -1,16 +1,16 @@
 generator client {
   provider      = "prisma-client-js"
   output        = "../client"
-  binaryTargets = ["native", "rhel-openssl-1.0.x", "rhel-openssl-3.0.x"]
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id           String     @id @default(cuid())
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
   email        String     @unique
   phone        String     @unique
   employeeId   String     @unique
@@ -26,7 +26,7 @@ model User {
 }
 
 model OtpVerification {
-  id        String   @id @default(cuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   email     String
   otpHash   String
   expiresAt DateTime
@@ -36,7 +36,7 @@ model OtpVerification {
 }
 
 model EmailLog {
-  id      String   @id @default(cuid())
+  id      String   @id @default(auto()) @map("_id") @db.ObjectId
   to      String
   subject String
   body    String
@@ -46,7 +46,7 @@ model EmailLog {
 }
 
 model Referral {
-  id             String         @id @default(cuid())
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
   refCode        String         @unique @default(cuid())
   candidateName  String
   candidateEmail String
@@ -56,27 +56,27 @@ model Referral {
   status         ReferralStatus @default(NEW)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
-  referredById   String
-  positionId     String
+  referredById   String         @db.ObjectId
+  positionId     String         @db.ObjectId
   position       Position       @relation(fields: [positionId], references: [id])
   referredBy     User           @relation(fields: [referredById], references: [id])
   statusHistory  StatusLog[]
 }
 
 model StatusLog {
-  id         String         @id @default(cuid())
+  id         String         @id @default(auto()) @map("_id") @db.ObjectId
   fromStatus ReferralStatus
   toStatus   ReferralStatus
   note       String?
   createdAt  DateTime       @default(now())
-  referralId String
+  referralId String         @db.ObjectId
   changedBy  String
   referral   Referral       @relation(fields: [referralId], references: [id])
 }
 
 model Position {
-  id         String     @id @default(cuid())
-  title      String
+  id         String     @id @default(auto()) @map("_id") @db.ObjectId
+  title      String     @unique
   department String?
   location   String?
   isActive   Boolean    @default(true)

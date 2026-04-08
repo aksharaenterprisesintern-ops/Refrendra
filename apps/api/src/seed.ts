@@ -18,10 +18,9 @@ async function main() {
 
   for (const pos of positions) {
     await prisma.position.upsert({
-      where: { id: pos.title.toLowerCase().replace(/ /g, '-') },
+      where: { title: pos.title },
       update: {},
       create: {
-        id: pos.title.toLowerCase().replace(/ /g, '-'),
         title: pos.title,
         department: pos.department,
       },

@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 
 /* ─── Types ─── */
 export type ReferralStatus = 'NEW' | 'CONTACTED' | 'SELECTED' | 'REJECTED';
-export type UserRole = 'EMPLOYEE' | 'ADMIN' | 'HR';
+export type UserRole = 'EMPLOYEE' | 'ADMIN' | 'HR' | 'CLUB_HEADER';
 
 export interface Referral {
   id: string;
@@ -17,6 +17,10 @@ export interface Referral {
   position: { id: string; title: string };
   resumeUrl?: string;
   notes?: string;
+  college?: string;
+  gradYear?: string;
+  bio?: string;
+  location?: string;
   status: ReferralStatus;
   createdAt: string;
   updatedAt: string;
@@ -30,6 +34,11 @@ export interface User {
   phone: string;
   employeeId: string;
   role: UserRole;
+  college?: string;
+  gradYear?: string;
+  bio?: string;
+  location?: string;
+  referredUsers?: User[];
 }
 
 interface AppContextType {
@@ -52,6 +61,8 @@ interface AppContextType {
   positions: any[];
   refreshData: () => Promise<void>;
   bulkImport: (data: any[]) => Promise<void>;
+  uploadFile: (file: File) => Promise<string | null>;
+  updateProfile: (data: any) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -65,15 +76,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   /* Helper to fetch data */
   const fetchData = useCallback(async (currUser: User | null) => {
     if (!currUser) return;
-    try {
-      const [refsRes, posRes] = await Promise.all([
-        api.get('/referrals'),
-        api.get('/positions'),
-      ]);
-      setReferrals(refsRes.data);
-      setPositions(posRes.data);
-    } catch (err) {
-      console.error('Failed to fetch data', err);
+    const [refsRes, posRes] = await Promise.allSettled([
+      api.get('/referrals'),
+      api.get('/positions'),
+    ]);
+
+    if (refsRes.status === 'fulfilled') {
+      setReferrals(refsRes.value.data);
+    } else {
+      console.error('Failed to fetch referrals', refsRes.reason);
+    }
+
+    if (posRes.status === 'fulfilled') {
+      setPositions(posRes.value.data);
+    } else {
+      console.error('Failed to fetch positions', posRes.reason);
     }
   }, []);
 
@@ -153,8 +170,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const register_user = useCallback(async (data: any): Promise<boolean> => {
     try {
-      await api.post('/auth/register', data);
-      toast.success('Registration successful!');
+      const res = await api.post('/auth/register', data);
+      if (res.data.demo) {
+        toast.success(`Demo Mode: OTP is ${res.data.otp}`, { duration: 10000 });
+      } else {
+        toast.success('Registration successful! Check your email.');
+      }
       return true;
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Registration failed');
@@ -215,6 +236,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const myReferrals = user ? referrals.filter(r => r.referredBy?.email === user.email) : [];
 
+  const uploadFile = useCallback(async (file: File): Promise<string | null> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await api.post('/upload/resume', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return res.data.url;
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Upload failed');
+      return null;
+    }
+  }, []);
+
   const bulkImport = useCallback(async (data: any[]) => {
     try {
       const res = await api.post('/referrals/bulk-import', { referrals: data });
@@ -225,13 +260,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [fetchData, user]);
 
+  const updateProfile = useCallback(async (data: any) => {
+    try {
+      const res = await api.patch('/users/me/profile', data);
+      const updatedUser = { ...user, ...res.data };
+      setUser(updatedUser as User);
+      localStorage.setItem('refhire_user', JSON.stringify(updatedUser));
+      toast.success('Profile updated');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Update failed');
+    }
+  }, [user]);
+
+  const fetchReferredUsers = useCallback(async () => {
+    if (!user) return;
+    try {
+      const res = await api.get('/users/me/referred-students');
+      setUser(prev => prev ? ({ ...prev, referredUsers: res.data }) : null);
+    } catch (err) {
+      console.error('Failed to fetch referred users', err);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+        fetchReferredUsers();
+    }
+  }, [user?.id, fetchReferredUsers]);
+
   return (
     <AppContext.Provider value={{
       user, isAuthenticated: !!user, login, sendOtp, verifyOtp, register_user, logout,
       referrals, myReferrals, addReferral, updateStatus, updateReferral, deleteReferral,
       positions,
-      refreshData: () => fetchData(user),
+      refreshData: async () => { await fetchData(user); await fetchReferredUsers(); },
       bulkImport,
+      uploadFile,
+      updateProfile,
     }}>
       {children}
     </AppContext.Provider>

@@ -51,7 +51,8 @@ export namespace $Enums {
   export const Role: {
   EMPLOYEE: 'EMPLOYEE',
   ADMIN: 'ADMIN',
-  HR: 'HR'
+  HR: 'HR',
+  CLUB_HEADER: 'CLUB_HEADER'
 };
 
 export type Role = (typeof Role)[keyof typeof Role]
@@ -133,53 +134,6 @@ export class PrismaClient<
   $use(cb: Prisma.Middleware): void
 
 /**
-   * Executes a prepared raw query and returns the number of affected rows.
-   * @example
-   * ```
-   * const result = await prisma.$executeRaw`UPDATE User SET cool = ${true} WHERE email = ${'user@email.com'};`
-   * ```
-   * 
-   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
-   */
-  $executeRaw<T = unknown>(query: TemplateStringsArray | Prisma.Sql, ...values: any[]): Prisma.PrismaPromise<number>;
-
-  /**
-   * Executes a raw query and returns the number of affected rows.
-   * Susceptible to SQL injections, see documentation.
-   * @example
-   * ```
-   * const result = await prisma.$executeRawUnsafe('UPDATE User SET cool = $1 WHERE email = $2 ;', true, 'user@email.com')
-   * ```
-   * 
-   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
-   */
-  $executeRawUnsafe<T = unknown>(query: string, ...values: any[]): Prisma.PrismaPromise<number>;
-
-  /**
-   * Performs a prepared raw query and returns the `SELECT` data.
-   * @example
-   * ```
-   * const result = await prisma.$queryRaw`SELECT * FROM User WHERE id = ${1} OR email = ${'user@email.com'};`
-   * ```
-   * 
-   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
-   */
-  $queryRaw<T = unknown>(query: TemplateStringsArray | Prisma.Sql, ...values: any[]): Prisma.PrismaPromise<T>;
-
-  /**
-   * Performs a raw query and returns the `SELECT` data.
-   * Susceptible to SQL injections, see documentation.
-   * @example
-   * ```
-   * const result = await prisma.$queryRawUnsafe('SELECT * FROM User WHERE id = $1 OR email = $2;', 1, 'user@email.com')
-   * ```
-   * 
-   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
-   */
-  $queryRawUnsafe<T = unknown>(query: string, ...values: any[]): Prisma.PrismaPromise<T>;
-
-
-  /**
    * Allows the running of a sequence of read/write operations that are guaranteed to either succeed or fail as a whole.
    * @example
    * ```
@@ -192,10 +146,24 @@ export class PrismaClient<
    * 
    * Read more in our [docs](https://www.prisma.io/docs/concepts/components/prisma-client/transactions).
    */
-  $transaction<P extends Prisma.PrismaPromise<any>[]>(arg: [...P], options?: { isolationLevel?: Prisma.TransactionIsolationLevel }): $Utils.JsPromise<runtime.Types.Utils.UnwrapTuple<P>>
+  $transaction<P extends Prisma.PrismaPromise<any>[]>(arg: [...P]): $Utils.JsPromise<runtime.Types.Utils.UnwrapTuple<P>>
 
-  $transaction<R>(fn: (prisma: Omit<PrismaClient, runtime.ITXClientDenyList>) => $Utils.JsPromise<R>, options?: { maxWait?: number, timeout?: number, isolationLevel?: Prisma.TransactionIsolationLevel }): $Utils.JsPromise<R>
+  $transaction<R>(fn: (prisma: Omit<PrismaClient, runtime.ITXClientDenyList>) => $Utils.JsPromise<R>, options?: { maxWait?: number, timeout?: number }): $Utils.JsPromise<R>
 
+  /**
+   * Executes a raw MongoDB command and returns the result of it.
+   * @example
+   * ```
+   * const user = await prisma.$runCommandRaw({
+   *   aggregate: 'User',
+   *   pipeline: [{ $match: { name: 'Bob' } }, { $project: { email: true, _id: false } }],
+   *   explain: false,
+   * })
+   * ```
+   * 
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   */
+  $runCommandRaw(command: Prisma.InputJsonObject): Prisma.PrismaPromise<Prisma.JsonObject>
 
   $extends: $Extensions.ExtendsHook<"extends", Prisma.TypeMapCb, ExtArgs>
 
@@ -721,7 +689,7 @@ export namespace Prisma {
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
       modelProps: "user" | "otpVerification" | "emailLog" | "referral" | "statusLog" | "position"
-      txIsolationLevel: Prisma.TransactionIsolationLevel
+      txIsolationLevel: never
     }
     model: {
       User: {
@@ -756,10 +724,6 @@ export namespace Prisma {
             args: Prisma.UserCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          createManyAndReturn: {
-            args: Prisma.UserCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$UserPayload>[]
-          }
           delete: {
             args: Prisma.UserDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$UserPayload>
@@ -787,6 +751,14 @@ export namespace Prisma {
           groupBy: {
             args: Prisma.UserGroupByArgs<ExtArgs>
             result: $Utils.Optional<UserGroupByOutputType>[]
+          }
+          findRaw: {
+            args: Prisma.UserFindRawArgs<ExtArgs>
+            result: JsonObject
+          }
+          aggregateRaw: {
+            args: Prisma.UserAggregateRawArgs<ExtArgs>
+            result: JsonObject
           }
           count: {
             args: Prisma.UserCountArgs<ExtArgs>
@@ -826,10 +798,6 @@ export namespace Prisma {
             args: Prisma.OtpVerificationCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          createManyAndReturn: {
-            args: Prisma.OtpVerificationCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$OtpVerificationPayload>[]
-          }
           delete: {
             args: Prisma.OtpVerificationDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$OtpVerificationPayload>
@@ -857,6 +825,14 @@ export namespace Prisma {
           groupBy: {
             args: Prisma.OtpVerificationGroupByArgs<ExtArgs>
             result: $Utils.Optional<OtpVerificationGroupByOutputType>[]
+          }
+          findRaw: {
+            args: Prisma.OtpVerificationFindRawArgs<ExtArgs>
+            result: JsonObject
+          }
+          aggregateRaw: {
+            args: Prisma.OtpVerificationAggregateRawArgs<ExtArgs>
+            result: JsonObject
           }
           count: {
             args: Prisma.OtpVerificationCountArgs<ExtArgs>
@@ -896,10 +872,6 @@ export namespace Prisma {
             args: Prisma.EmailLogCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          createManyAndReturn: {
-            args: Prisma.EmailLogCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$EmailLogPayload>[]
-          }
           delete: {
             args: Prisma.EmailLogDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$EmailLogPayload>
@@ -927,6 +899,14 @@ export namespace Prisma {
           groupBy: {
             args: Prisma.EmailLogGroupByArgs<ExtArgs>
             result: $Utils.Optional<EmailLogGroupByOutputType>[]
+          }
+          findRaw: {
+            args: Prisma.EmailLogFindRawArgs<ExtArgs>
+            result: JsonObject
+          }
+          aggregateRaw: {
+            args: Prisma.EmailLogAggregateRawArgs<ExtArgs>
+            result: JsonObject
           }
           count: {
             args: Prisma.EmailLogCountArgs<ExtArgs>
@@ -966,10 +946,6 @@ export namespace Prisma {
             args: Prisma.ReferralCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          createManyAndReturn: {
-            args: Prisma.ReferralCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ReferralPayload>[]
-          }
           delete: {
             args: Prisma.ReferralDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$ReferralPayload>
@@ -997,6 +973,14 @@ export namespace Prisma {
           groupBy: {
             args: Prisma.ReferralGroupByArgs<ExtArgs>
             result: $Utils.Optional<ReferralGroupByOutputType>[]
+          }
+          findRaw: {
+            args: Prisma.ReferralFindRawArgs<ExtArgs>
+            result: JsonObject
+          }
+          aggregateRaw: {
+            args: Prisma.ReferralAggregateRawArgs<ExtArgs>
+            result: JsonObject
           }
           count: {
             args: Prisma.ReferralCountArgs<ExtArgs>
@@ -1036,10 +1020,6 @@ export namespace Prisma {
             args: Prisma.StatusLogCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          createManyAndReturn: {
-            args: Prisma.StatusLogCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$StatusLogPayload>[]
-          }
           delete: {
             args: Prisma.StatusLogDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$StatusLogPayload>
@@ -1067,6 +1047,14 @@ export namespace Prisma {
           groupBy: {
             args: Prisma.StatusLogGroupByArgs<ExtArgs>
             result: $Utils.Optional<StatusLogGroupByOutputType>[]
+          }
+          findRaw: {
+            args: Prisma.StatusLogFindRawArgs<ExtArgs>
+            result: JsonObject
+          }
+          aggregateRaw: {
+            args: Prisma.StatusLogAggregateRawArgs<ExtArgs>
+            result: JsonObject
           }
           count: {
             args: Prisma.StatusLogCountArgs<ExtArgs>
@@ -1106,10 +1094,6 @@ export namespace Prisma {
             args: Prisma.PositionCreateManyArgs<ExtArgs>
             result: BatchPayload
           }
-          createManyAndReturn: {
-            args: Prisma.PositionCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$PositionPayload>[]
-          }
           delete: {
             args: Prisma.PositionDeleteArgs<ExtArgs>
             result: $Utils.PayloadToResult<Prisma.$PositionPayload>
@@ -1138,6 +1122,14 @@ export namespace Prisma {
             args: Prisma.PositionGroupByArgs<ExtArgs>
             result: $Utils.Optional<PositionGroupByOutputType>[]
           }
+          findRaw: {
+            args: Prisma.PositionFindRawArgs<ExtArgs>
+            result: JsonObject
+          }
+          aggregateRaw: {
+            args: Prisma.PositionAggregateRawArgs<ExtArgs>
+            result: JsonObject
+          }
           count: {
             args: Prisma.PositionCountArgs<ExtArgs>
             result: $Utils.Optional<PositionCountAggregateOutputType> | number
@@ -1149,21 +1141,9 @@ export namespace Prisma {
     other: {
       payload: any
       operations: {
-        $executeRaw: {
-          args: [query: TemplateStringsArray | Prisma.Sql, ...values: any[]],
-          result: any
-        }
-        $executeRawUnsafe: {
-          args: [query: string, ...values: any[]],
-          result: any
-        }
-        $queryRaw: {
-          args: [query: TemplateStringsArray | Prisma.Sql, ...values: any[]],
-          result: any
-        }
-        $queryRawUnsafe: {
-          args: [query: string, ...values: any[]],
-          result: any
+        $runCommandRaw: {
+          args: Prisma.InputJsonObject,
+          result: Prisma.JsonObject
         }
       }
     }
@@ -1209,7 +1189,6 @@ export namespace Prisma {
     transactionOptions?: {
       maxWait?: number
       timeout?: number
-      isolationLevel?: Prisma.TransactionIsolationLevel
     }
   }
 
@@ -1305,10 +1284,12 @@ export namespace Prisma {
    */
 
   export type UserCountOutputType = {
+    referredUsers: number
     referrals: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    referredUsers?: boolean | UserCountOutputTypeCountReferredUsersArgs
     referrals?: boolean | UserCountOutputTypeCountReferralsArgs
   }
 
@@ -1321,6 +1302,13 @@ export namespace Prisma {
      * Select specific fields to fetch from the UserCountOutputType
      */
     select?: UserCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountReferredUsersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserWhereInput
   }
 
   /**
@@ -1419,7 +1407,12 @@ export namespace Prisma {
     isVerified: boolean | null
     otp: string | null
     otpExpiry: Date | null
+    college: string | null
+    gradYear: string | null
+    bio: string | null
+    location: string | null
     createdAt: Date | null
+    referredById: string | null
   }
 
   export type UserMaxAggregateOutputType = {
@@ -1434,7 +1427,12 @@ export namespace Prisma {
     isVerified: boolean | null
     otp: string | null
     otpExpiry: Date | null
+    college: string | null
+    gradYear: string | null
+    bio: string | null
+    location: string | null
     createdAt: Date | null
+    referredById: string | null
   }
 
   export type UserCountAggregateOutputType = {
@@ -1449,7 +1447,12 @@ export namespace Prisma {
     isVerified: number
     otp: number
     otpExpiry: number
+    college: number
+    gradYear: number
+    bio: number
+    location: number
     createdAt: number
+    referredById: number
     _all: number
   }
 
@@ -1466,7 +1469,12 @@ export namespace Prisma {
     isVerified?: true
     otp?: true
     otpExpiry?: true
+    college?: true
+    gradYear?: true
+    bio?: true
+    location?: true
     createdAt?: true
+    referredById?: true
   }
 
   export type UserMaxAggregateInputType = {
@@ -1481,7 +1489,12 @@ export namespace Prisma {
     isVerified?: true
     otp?: true
     otpExpiry?: true
+    college?: true
+    gradYear?: true
+    bio?: true
+    location?: true
     createdAt?: true
+    referredById?: true
   }
 
   export type UserCountAggregateInputType = {
@@ -1496,7 +1509,12 @@ export namespace Prisma {
     isVerified?: true
     otp?: true
     otpExpiry?: true
+    college?: true
+    gradYear?: true
+    bio?: true
+    location?: true
     createdAt?: true
+    referredById?: true
     _all?: true
   }
 
@@ -1584,7 +1602,12 @@ export namespace Prisma {
     isVerified: boolean
     otp: string | null
     otpExpiry: Date | null
+    college: string | null
+    gradYear: string | null
+    bio: string | null
+    location: string | null
     createdAt: Date
+    referredById: string | null
     _count: UserCountAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
@@ -1616,25 +1639,18 @@ export namespace Prisma {
     isVerified?: boolean
     otp?: boolean
     otpExpiry?: boolean
+    college?: boolean
+    gradYear?: boolean
+    bio?: boolean
+    location?: boolean
     createdAt?: boolean
+    referredById?: boolean
+    referredBy?: boolean | User$referredByArgs<ExtArgs>
+    referredUsers?: boolean | User$referredUsersArgs<ExtArgs>
     referrals?: boolean | User$referralsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
-  export type UserSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    email?: boolean
-    phone?: boolean
-    employeeId?: boolean
-    name?: boolean
-    department?: boolean
-    role?: boolean
-    passwordHash?: boolean
-    isVerified?: boolean
-    otp?: boolean
-    otpExpiry?: boolean
-    createdAt?: boolean
-  }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
     id?: boolean
@@ -1648,18 +1664,26 @@ export namespace Prisma {
     isVerified?: boolean
     otp?: boolean
     otpExpiry?: boolean
+    college?: boolean
+    gradYear?: boolean
+    bio?: boolean
+    location?: boolean
     createdAt?: boolean
+    referredById?: boolean
   }
 
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    referredBy?: boolean | User$referredByArgs<ExtArgs>
+    referredUsers?: boolean | User$referredUsersArgs<ExtArgs>
     referrals?: boolean | User$referralsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
-  export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $UserPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "User"
     objects: {
+      referredBy: Prisma.$UserPayload<ExtArgs> | null
+      referredUsers: Prisma.$UserPayload<ExtArgs>[]
       referrals: Prisma.$ReferralPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
@@ -1674,7 +1698,12 @@ export namespace Prisma {
       isVerified: boolean
       otp: string | null
       otpExpiry: Date | null
+      college: string | null
+      gradYear: string | null
+      bio: string | null
+      location: string | null
       createdAt: Date
+      referredById: string | null
     }, ExtArgs["result"]["user"]>
     composites: {}
   }
@@ -1793,30 +1822,6 @@ export namespace Prisma {
     createMany<T extends UserCreateManyArgs>(args?: SelectSubset<T, UserCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many Users and returns the data saved in the database.
-     * @param {UserCreateManyAndReturnArgs} args - Arguments to create many Users.
-     * @example
-     * // Create many Users
-     * const user = await prisma.user.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many Users and only return the `id`
-     * const userWithIdOnly = await prisma.user.createManyAndReturn({ 
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends UserCreateManyAndReturnArgs>(args?: SelectSubset<T, UserCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "createManyAndReturn">>
-
-    /**
      * Delete a User.
      * @param {UserDeleteArgs} args - Arguments to delete one User.
      * @example
@@ -1898,6 +1903,29 @@ export namespace Prisma {
      * })
      */
     upsert<T extends UserUpsertArgs>(args: SelectSubset<T, UserUpsertArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+    /**
+     * Find zero or more Users that matches the filter.
+     * @param {UserFindRawArgs} args - Select which filters you would like to apply.
+     * @example
+     * const user = await prisma.user.findRaw({
+     *   filter: { age: { $gt: 25 } } 
+     * })
+     */
+    findRaw(args?: UserFindRawArgs): Prisma.PrismaPromise<JsonObject>
+
+    /**
+     * Perform aggregation operations on a User.
+     * @param {UserAggregateRawArgs} args - Select which aggregations you would like to apply.
+     * @example
+     * const user = await prisma.user.aggregateRaw({
+     *   pipeline: [
+     *     { $match: { status: "registered" } },
+     *     { $group: { _id: "$country", total: { $sum: 1 } } }
+     *   ]
+     * })
+     */
+    aggregateRaw(args?: UserAggregateRawArgs): Prisma.PrismaPromise<JsonObject>
 
 
     /**
@@ -2039,6 +2067,8 @@ export namespace Prisma {
    */
   export interface Prisma__UserClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    referredBy<T extends User$referredByArgs<ExtArgs> = {}>(args?: Subset<T, User$referredByArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow"> | null, null, ExtArgs>
+    referredUsers<T extends User$referredUsersArgs<ExtArgs> = {}>(args?: Subset<T, User$referredUsersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany"> | Null>
     referrals<T extends User$referralsArgs<ExtArgs> = {}>(args?: Subset<T, User$referralsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReferralPayload<ExtArgs>, T, "findMany"> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -2080,7 +2110,12 @@ export namespace Prisma {
     readonly isVerified: FieldRef<"User", 'Boolean'>
     readonly otp: FieldRef<"User", 'String'>
     readonly otpExpiry: FieldRef<"User", 'DateTime'>
+    readonly college: FieldRef<"User", 'String'>
+    readonly gradYear: FieldRef<"User", 'String'>
+    readonly bio: FieldRef<"User", 'String'>
+    readonly location: FieldRef<"User", 'String'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
+    readonly referredById: FieldRef<"User", 'String'>
   }
     
 
@@ -2286,22 +2321,6 @@ export namespace Prisma {
      * The data used to create many Users.
      */
     data: UserCreateManyInput | UserCreateManyInput[]
-    skipDuplicates?: boolean
-  }
-
-  /**
-   * User createManyAndReturn
-   */
-  export type UserCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the User
-     */
-    select?: UserSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * The data used to create many Users.
-     */
-    data: UserCreateManyInput | UserCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -2392,6 +2411,69 @@ export namespace Prisma {
      * Filter which Users to delete
      */
     where?: UserWhereInput
+  }
+
+  /**
+   * User findRaw
+   */
+  export type UserFindRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The query predicate filter. If unspecified, then all documents in the collection will match the predicate. ${@link https://docs.mongodb.com/manual/reference/operator/query MongoDB Docs}.
+     */
+    filter?: InputJsonValue
+    /**
+     * Additional options to pass to the `find` command ${@link https://docs.mongodb.com/manual/reference/command/find/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
+  }
+
+  /**
+   * User aggregateRaw
+   */
+  export type UserAggregateRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * An array of aggregation stages to process and transform the document stream via the aggregation pipeline. ${@link https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline MongoDB Docs}.
+     */
+    pipeline?: InputJsonValue[]
+    /**
+     * Additional options to pass to the `aggregate` command ${@link https://docs.mongodb.com/manual/reference/command/aggregate/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
+  }
+
+  /**
+   * User.referredBy
+   */
+  export type User$referredByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+  }
+
+  /**
+   * User.referredUsers
+   */
+  export type User$referredUsersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
+    orderBy?: UserOrderByWithRelationInput | UserOrderByWithRelationInput[]
+    cursor?: UserWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: UserScalarFieldEnum | UserScalarFieldEnum[]
   }
 
   /**
@@ -2645,15 +2727,6 @@ export namespace Prisma {
     createdAt?: boolean
   }, ExtArgs["result"]["otpVerification"]>
 
-  export type OtpVerificationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    email?: boolean
-    otpHash?: boolean
-    expiresAt?: boolean
-    attempts?: boolean
-    used?: boolean
-    createdAt?: boolean
-  }, ExtArgs["result"]["otpVerification"]>
 
   export type OtpVerificationSelectScalar = {
     id?: boolean
@@ -2795,30 +2868,6 @@ export namespace Prisma {
     createMany<T extends OtpVerificationCreateManyArgs>(args?: SelectSubset<T, OtpVerificationCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many OtpVerifications and returns the data saved in the database.
-     * @param {OtpVerificationCreateManyAndReturnArgs} args - Arguments to create many OtpVerifications.
-     * @example
-     * // Create many OtpVerifications
-     * const otpVerification = await prisma.otpVerification.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many OtpVerifications and only return the `id`
-     * const otpVerificationWithIdOnly = await prisma.otpVerification.createManyAndReturn({ 
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends OtpVerificationCreateManyAndReturnArgs>(args?: SelectSubset<T, OtpVerificationCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OtpVerificationPayload<ExtArgs>, T, "createManyAndReturn">>
-
-    /**
      * Delete a OtpVerification.
      * @param {OtpVerificationDeleteArgs} args - Arguments to delete one OtpVerification.
      * @example
@@ -2900,6 +2949,29 @@ export namespace Prisma {
      * })
      */
     upsert<T extends OtpVerificationUpsertArgs>(args: SelectSubset<T, OtpVerificationUpsertArgs<ExtArgs>>): Prisma__OtpVerificationClient<$Result.GetResult<Prisma.$OtpVerificationPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+    /**
+     * Find zero or more OtpVerifications that matches the filter.
+     * @param {OtpVerificationFindRawArgs} args - Select which filters you would like to apply.
+     * @example
+     * const otpVerification = await prisma.otpVerification.findRaw({
+     *   filter: { age: { $gt: 25 } } 
+     * })
+     */
+    findRaw(args?: OtpVerificationFindRawArgs): Prisma.PrismaPromise<JsonObject>
+
+    /**
+     * Perform aggregation operations on a OtpVerification.
+     * @param {OtpVerificationAggregateRawArgs} args - Select which aggregations you would like to apply.
+     * @example
+     * const otpVerification = await prisma.otpVerification.aggregateRaw({
+     *   pipeline: [
+     *     { $match: { status: "registered" } },
+     *     { $group: { _id: "$country", total: { $sum: 1 } } }
+     *   ]
+     * })
+     */
+    aggregateRaw(args?: OtpVerificationAggregateRawArgs): Prisma.PrismaPromise<JsonObject>
 
 
     /**
@@ -3258,22 +3330,6 @@ export namespace Prisma {
      * The data used to create many OtpVerifications.
      */
     data: OtpVerificationCreateManyInput | OtpVerificationCreateManyInput[]
-    skipDuplicates?: boolean
-  }
-
-  /**
-   * OtpVerification createManyAndReturn
-   */
-  export type OtpVerificationCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the OtpVerification
-     */
-    select?: OtpVerificationSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * The data used to create many OtpVerifications.
-     */
-    data: OtpVerificationCreateManyInput | OtpVerificationCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -3352,6 +3408,34 @@ export namespace Prisma {
      * Filter which OtpVerifications to delete
      */
     where?: OtpVerificationWhereInput
+  }
+
+  /**
+   * OtpVerification findRaw
+   */
+  export type OtpVerificationFindRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The query predicate filter. If unspecified, then all documents in the collection will match the predicate. ${@link https://docs.mongodb.com/manual/reference/operator/query MongoDB Docs}.
+     */
+    filter?: InputJsonValue
+    /**
+     * Additional options to pass to the `find` command ${@link https://docs.mongodb.com/manual/reference/command/find/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
+  }
+
+  /**
+   * OtpVerification aggregateRaw
+   */
+  export type OtpVerificationAggregateRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * An array of aggregation stages to process and transform the document stream via the aggregation pipeline. ${@link https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline MongoDB Docs}.
+     */
+    pipeline?: InputJsonValue[]
+    /**
+     * Additional options to pass to the `aggregate` command ${@link https://docs.mongodb.com/manual/reference/command/aggregate/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
   }
 
   /**
@@ -3547,15 +3631,6 @@ export namespace Prisma {
     status?: boolean
   }, ExtArgs["result"]["emailLog"]>
 
-  export type EmailLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    to?: boolean
-    subject?: boolean
-    body?: boolean
-    otp?: boolean
-    sentAt?: boolean
-    status?: boolean
-  }, ExtArgs["result"]["emailLog"]>
 
   export type EmailLogSelectScalar = {
     id?: boolean
@@ -3697,30 +3772,6 @@ export namespace Prisma {
     createMany<T extends EmailLogCreateManyArgs>(args?: SelectSubset<T, EmailLogCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many EmailLogs and returns the data saved in the database.
-     * @param {EmailLogCreateManyAndReturnArgs} args - Arguments to create many EmailLogs.
-     * @example
-     * // Create many EmailLogs
-     * const emailLog = await prisma.emailLog.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many EmailLogs and only return the `id`
-     * const emailLogWithIdOnly = await prisma.emailLog.createManyAndReturn({ 
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends EmailLogCreateManyAndReturnArgs>(args?: SelectSubset<T, EmailLogCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$EmailLogPayload<ExtArgs>, T, "createManyAndReturn">>
-
-    /**
      * Delete a EmailLog.
      * @param {EmailLogDeleteArgs} args - Arguments to delete one EmailLog.
      * @example
@@ -3802,6 +3853,29 @@ export namespace Prisma {
      * })
      */
     upsert<T extends EmailLogUpsertArgs>(args: SelectSubset<T, EmailLogUpsertArgs<ExtArgs>>): Prisma__EmailLogClient<$Result.GetResult<Prisma.$EmailLogPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+    /**
+     * Find zero or more EmailLogs that matches the filter.
+     * @param {EmailLogFindRawArgs} args - Select which filters you would like to apply.
+     * @example
+     * const emailLog = await prisma.emailLog.findRaw({
+     *   filter: { age: { $gt: 25 } } 
+     * })
+     */
+    findRaw(args?: EmailLogFindRawArgs): Prisma.PrismaPromise<JsonObject>
+
+    /**
+     * Perform aggregation operations on a EmailLog.
+     * @param {EmailLogAggregateRawArgs} args - Select which aggregations you would like to apply.
+     * @example
+     * const emailLog = await prisma.emailLog.aggregateRaw({
+     *   pipeline: [
+     *     { $match: { status: "registered" } },
+     *     { $group: { _id: "$country", total: { $sum: 1 } } }
+     *   ]
+     * })
+     */
+    aggregateRaw(args?: EmailLogAggregateRawArgs): Prisma.PrismaPromise<JsonObject>
 
 
     /**
@@ -4160,22 +4234,6 @@ export namespace Prisma {
      * The data used to create many EmailLogs.
      */
     data: EmailLogCreateManyInput | EmailLogCreateManyInput[]
-    skipDuplicates?: boolean
-  }
-
-  /**
-   * EmailLog createManyAndReturn
-   */
-  export type EmailLogCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the EmailLog
-     */
-    select?: EmailLogSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * The data used to create many EmailLogs.
-     */
-    data: EmailLogCreateManyInput | EmailLogCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -4257,6 +4315,34 @@ export namespace Prisma {
   }
 
   /**
+   * EmailLog findRaw
+   */
+  export type EmailLogFindRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The query predicate filter. If unspecified, then all documents in the collection will match the predicate. ${@link https://docs.mongodb.com/manual/reference/operator/query MongoDB Docs}.
+     */
+    filter?: InputJsonValue
+    /**
+     * Additional options to pass to the `find` command ${@link https://docs.mongodb.com/manual/reference/command/find/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
+  }
+
+  /**
+   * EmailLog aggregateRaw
+   */
+  export type EmailLogAggregateRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * An array of aggregation stages to process and transform the document stream via the aggregation pipeline. ${@link https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline MongoDB Docs}.
+     */
+    pipeline?: InputJsonValue[]
+    /**
+     * Additional options to pass to the `aggregate` command ${@link https://docs.mongodb.com/manual/reference/command/aggregate/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
+  }
+
+  /**
    * EmailLog without action
    */
   export type EmailLogDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -4285,6 +4371,10 @@ export namespace Prisma {
     candidatePhone: string | null
     resumeUrl: string | null
     notes: string | null
+    college: string | null
+    gradYear: string | null
+    bio: string | null
+    location: string | null
     status: $Enums.ReferralStatus | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -4300,6 +4390,10 @@ export namespace Prisma {
     candidatePhone: string | null
     resumeUrl: string | null
     notes: string | null
+    college: string | null
+    gradYear: string | null
+    bio: string | null
+    location: string | null
     status: $Enums.ReferralStatus | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -4315,6 +4409,10 @@ export namespace Prisma {
     candidatePhone: number
     resumeUrl: number
     notes: number
+    college: number
+    gradYear: number
+    bio: number
+    location: number
     status: number
     createdAt: number
     updatedAt: number
@@ -4332,6 +4430,10 @@ export namespace Prisma {
     candidatePhone?: true
     resumeUrl?: true
     notes?: true
+    college?: true
+    gradYear?: true
+    bio?: true
+    location?: true
     status?: true
     createdAt?: true
     updatedAt?: true
@@ -4347,6 +4449,10 @@ export namespace Prisma {
     candidatePhone?: true
     resumeUrl?: true
     notes?: true
+    college?: true
+    gradYear?: true
+    bio?: true
+    location?: true
     status?: true
     createdAt?: true
     updatedAt?: true
@@ -4362,6 +4468,10 @@ export namespace Prisma {
     candidatePhone?: true
     resumeUrl?: true
     notes?: true
+    college?: true
+    gradYear?: true
+    bio?: true
+    location?: true
     status?: true
     createdAt?: true
     updatedAt?: true
@@ -4450,6 +4560,10 @@ export namespace Prisma {
     candidatePhone: string
     resumeUrl: string | null
     notes: string | null
+    college: string | null
+    gradYear: string | null
+    bio: string | null
+    location: string | null
     status: $Enums.ReferralStatus
     createdAt: Date
     updatedAt: Date
@@ -4482,6 +4596,10 @@ export namespace Prisma {
     candidatePhone?: boolean
     resumeUrl?: boolean
     notes?: boolean
+    college?: boolean
+    gradYear?: boolean
+    bio?: boolean
+    location?: boolean
     status?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -4493,22 +4611,6 @@ export namespace Prisma {
     _count?: boolean | ReferralCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["referral"]>
 
-  export type ReferralSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    refCode?: boolean
-    candidateName?: boolean
-    candidateEmail?: boolean
-    candidatePhone?: boolean
-    resumeUrl?: boolean
-    notes?: boolean
-    status?: boolean
-    createdAt?: boolean
-    updatedAt?: boolean
-    referredById?: boolean
-    positionId?: boolean
-    position?: boolean | PositionDefaultArgs<ExtArgs>
-    referredBy?: boolean | UserDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["referral"]>
 
   export type ReferralSelectScalar = {
     id?: boolean
@@ -4518,6 +4620,10 @@ export namespace Prisma {
     candidatePhone?: boolean
     resumeUrl?: boolean
     notes?: boolean
+    college?: boolean
+    gradYear?: boolean
+    bio?: boolean
+    location?: boolean
     status?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -4530,10 +4636,6 @@ export namespace Prisma {
     referredBy?: boolean | UserDefaultArgs<ExtArgs>
     statusHistory?: boolean | Referral$statusHistoryArgs<ExtArgs>
     _count?: boolean | ReferralCountOutputTypeDefaultArgs<ExtArgs>
-  }
-  export type ReferralIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    position?: boolean | PositionDefaultArgs<ExtArgs>
-    referredBy?: boolean | UserDefaultArgs<ExtArgs>
   }
 
   export type $ReferralPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -4551,6 +4653,10 @@ export namespace Prisma {
       candidatePhone: string
       resumeUrl: string | null
       notes: string | null
+      college: string | null
+      gradYear: string | null
+      bio: string | null
+      location: string | null
       status: $Enums.ReferralStatus
       createdAt: Date
       updatedAt: Date
@@ -4674,30 +4780,6 @@ export namespace Prisma {
     createMany<T extends ReferralCreateManyArgs>(args?: SelectSubset<T, ReferralCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many Referrals and returns the data saved in the database.
-     * @param {ReferralCreateManyAndReturnArgs} args - Arguments to create many Referrals.
-     * @example
-     * // Create many Referrals
-     * const referral = await prisma.referral.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many Referrals and only return the `id`
-     * const referralWithIdOnly = await prisma.referral.createManyAndReturn({ 
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends ReferralCreateManyAndReturnArgs>(args?: SelectSubset<T, ReferralCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReferralPayload<ExtArgs>, T, "createManyAndReturn">>
-
-    /**
      * Delete a Referral.
      * @param {ReferralDeleteArgs} args - Arguments to delete one Referral.
      * @example
@@ -4779,6 +4861,29 @@ export namespace Prisma {
      * })
      */
     upsert<T extends ReferralUpsertArgs>(args: SelectSubset<T, ReferralUpsertArgs<ExtArgs>>): Prisma__ReferralClient<$Result.GetResult<Prisma.$ReferralPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+    /**
+     * Find zero or more Referrals that matches the filter.
+     * @param {ReferralFindRawArgs} args - Select which filters you would like to apply.
+     * @example
+     * const referral = await prisma.referral.findRaw({
+     *   filter: { age: { $gt: 25 } } 
+     * })
+     */
+    findRaw(args?: ReferralFindRawArgs): Prisma.PrismaPromise<JsonObject>
+
+    /**
+     * Perform aggregation operations on a Referral.
+     * @param {ReferralAggregateRawArgs} args - Select which aggregations you would like to apply.
+     * @example
+     * const referral = await prisma.referral.aggregateRaw({
+     *   pipeline: [
+     *     { $match: { status: "registered" } },
+     *     { $group: { _id: "$country", total: { $sum: 1 } } }
+     *   ]
+     * })
+     */
+    aggregateRaw(args?: ReferralAggregateRawArgs): Prisma.PrismaPromise<JsonObject>
 
 
     /**
@@ -4959,6 +5064,10 @@ export namespace Prisma {
     readonly candidatePhone: FieldRef<"Referral", 'String'>
     readonly resumeUrl: FieldRef<"Referral", 'String'>
     readonly notes: FieldRef<"Referral", 'String'>
+    readonly college: FieldRef<"Referral", 'String'>
+    readonly gradYear: FieldRef<"Referral", 'String'>
+    readonly bio: FieldRef<"Referral", 'String'>
+    readonly location: FieldRef<"Referral", 'String'>
     readonly status: FieldRef<"Referral", 'ReferralStatus'>
     readonly createdAt: FieldRef<"Referral", 'DateTime'>
     readonly updatedAt: FieldRef<"Referral", 'DateTime'>
@@ -5169,26 +5278,6 @@ export namespace Prisma {
      * The data used to create many Referrals.
      */
     data: ReferralCreateManyInput | ReferralCreateManyInput[]
-    skipDuplicates?: boolean
-  }
-
-  /**
-   * Referral createManyAndReturn
-   */
-  export type ReferralCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Referral
-     */
-    select?: ReferralSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * The data used to create many Referrals.
-     */
-    data: ReferralCreateManyInput | ReferralCreateManyInput[]
-    skipDuplicates?: boolean
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ReferralIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -5279,6 +5368,34 @@ export namespace Prisma {
      * Filter which Referrals to delete
      */
     where?: ReferralWhereInput
+  }
+
+  /**
+   * Referral findRaw
+   */
+  export type ReferralFindRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The query predicate filter. If unspecified, then all documents in the collection will match the predicate. ${@link https://docs.mongodb.com/manual/reference/operator/query MongoDB Docs}.
+     */
+    filter?: InputJsonValue
+    /**
+     * Additional options to pass to the `find` command ${@link https://docs.mongodb.com/manual/reference/command/find/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
+  }
+
+  /**
+   * Referral aggregateRaw
+   */
+  export type ReferralAggregateRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * An array of aggregation stages to process and transform the document stream via the aggregation pipeline. ${@link https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline MongoDB Docs}.
+     */
+    pipeline?: InputJsonValue[]
+    /**
+     * Additional options to pass to the `aggregate` command ${@link https://docs.mongodb.com/manual/reference/command/aggregate/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
   }
 
   /**
@@ -5499,16 +5616,6 @@ export namespace Prisma {
     referral?: boolean | ReferralDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["statusLog"]>
 
-  export type StatusLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    fromStatus?: boolean
-    toStatus?: boolean
-    note?: boolean
-    createdAt?: boolean
-    referralId?: boolean
-    changedBy?: boolean
-    referral?: boolean | ReferralDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["statusLog"]>
 
   export type StatusLogSelectScalar = {
     id?: boolean
@@ -5521,9 +5628,6 @@ export namespace Prisma {
   }
 
   export type StatusLogInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    referral?: boolean | ReferralDefaultArgs<ExtArgs>
-  }
-  export type StatusLogIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     referral?: boolean | ReferralDefaultArgs<ExtArgs>
   }
 
@@ -5658,30 +5762,6 @@ export namespace Prisma {
     createMany<T extends StatusLogCreateManyArgs>(args?: SelectSubset<T, StatusLogCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many StatusLogs and returns the data saved in the database.
-     * @param {StatusLogCreateManyAndReturnArgs} args - Arguments to create many StatusLogs.
-     * @example
-     * // Create many StatusLogs
-     * const statusLog = await prisma.statusLog.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many StatusLogs and only return the `id`
-     * const statusLogWithIdOnly = await prisma.statusLog.createManyAndReturn({ 
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends StatusLogCreateManyAndReturnArgs>(args?: SelectSubset<T, StatusLogCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$StatusLogPayload<ExtArgs>, T, "createManyAndReturn">>
-
-    /**
      * Delete a StatusLog.
      * @param {StatusLogDeleteArgs} args - Arguments to delete one StatusLog.
      * @example
@@ -5763,6 +5843,29 @@ export namespace Prisma {
      * })
      */
     upsert<T extends StatusLogUpsertArgs>(args: SelectSubset<T, StatusLogUpsertArgs<ExtArgs>>): Prisma__StatusLogClient<$Result.GetResult<Prisma.$StatusLogPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+    /**
+     * Find zero or more StatusLogs that matches the filter.
+     * @param {StatusLogFindRawArgs} args - Select which filters you would like to apply.
+     * @example
+     * const statusLog = await prisma.statusLog.findRaw({
+     *   filter: { age: { $gt: 25 } } 
+     * })
+     */
+    findRaw(args?: StatusLogFindRawArgs): Prisma.PrismaPromise<JsonObject>
+
+    /**
+     * Perform aggregation operations on a StatusLog.
+     * @param {StatusLogAggregateRawArgs} args - Select which aggregations you would like to apply.
+     * @example
+     * const statusLog = await prisma.statusLog.aggregateRaw({
+     *   pipeline: [
+     *     { $match: { status: "registered" } },
+     *     { $group: { _id: "$country", total: { $sum: 1 } } }
+     *   ]
+     * })
+     */
+    aggregateRaw(args?: StatusLogAggregateRawArgs): Prisma.PrismaPromise<JsonObject>
 
 
     /**
@@ -6146,26 +6249,6 @@ export namespace Prisma {
      * The data used to create many StatusLogs.
      */
     data: StatusLogCreateManyInput | StatusLogCreateManyInput[]
-    skipDuplicates?: boolean
-  }
-
-  /**
-   * StatusLog createManyAndReturn
-   */
-  export type StatusLogCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the StatusLog
-     */
-    select?: StatusLogSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * The data used to create many StatusLogs.
-     */
-    data: StatusLogCreateManyInput | StatusLogCreateManyInput[]
-    skipDuplicates?: boolean
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: StatusLogIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -6256,6 +6339,34 @@ export namespace Prisma {
      * Filter which StatusLogs to delete
      */
     where?: StatusLogWhereInput
+  }
+
+  /**
+   * StatusLog findRaw
+   */
+  export type StatusLogFindRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The query predicate filter. If unspecified, then all documents in the collection will match the predicate. ${@link https://docs.mongodb.com/manual/reference/operator/query MongoDB Docs}.
+     */
+    filter?: InputJsonValue
+    /**
+     * Additional options to pass to the `find` command ${@link https://docs.mongodb.com/manual/reference/command/find/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
+  }
+
+  /**
+   * StatusLog aggregateRaw
+   */
+  export type StatusLogAggregateRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * An array of aggregation stages to process and transform the document stream via the aggregation pipeline. ${@link https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline MongoDB Docs}.
+     */
+    pipeline?: InputJsonValue[]
+    /**
+     * Additional options to pass to the `aggregate` command ${@link https://docs.mongodb.com/manual/reference/command/aggregate/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
   }
 
   /**
@@ -6441,13 +6552,6 @@ export namespace Prisma {
     _count?: boolean | PositionCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["position"]>
 
-  export type PositionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    title?: boolean
-    department?: boolean
-    location?: boolean
-    isActive?: boolean
-  }, ExtArgs["result"]["position"]>
 
   export type PositionSelectScalar = {
     id?: boolean
@@ -6461,7 +6565,6 @@ export namespace Prisma {
     referrals?: boolean | Position$referralsArgs<ExtArgs>
     _count?: boolean | PositionCountOutputTypeDefaultArgs<ExtArgs>
   }
-  export type PositionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $PositionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Position"
@@ -6592,30 +6695,6 @@ export namespace Prisma {
     createMany<T extends PositionCreateManyArgs>(args?: SelectSubset<T, PositionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
 
     /**
-     * Create many Positions and returns the data saved in the database.
-     * @param {PositionCreateManyAndReturnArgs} args - Arguments to create many Positions.
-     * @example
-     * // Create many Positions
-     * const position = await prisma.position.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many Positions and only return the `id`
-     * const positionWithIdOnly = await prisma.position.createManyAndReturn({ 
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends PositionCreateManyAndReturnArgs>(args?: SelectSubset<T, PositionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PositionPayload<ExtArgs>, T, "createManyAndReturn">>
-
-    /**
      * Delete a Position.
      * @param {PositionDeleteArgs} args - Arguments to delete one Position.
      * @example
@@ -6697,6 +6776,29 @@ export namespace Prisma {
      * })
      */
     upsert<T extends PositionUpsertArgs>(args: SelectSubset<T, PositionUpsertArgs<ExtArgs>>): Prisma__PositionClient<$Result.GetResult<Prisma.$PositionPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+    /**
+     * Find zero or more Positions that matches the filter.
+     * @param {PositionFindRawArgs} args - Select which filters you would like to apply.
+     * @example
+     * const position = await prisma.position.findRaw({
+     *   filter: { age: { $gt: 25 } } 
+     * })
+     */
+    findRaw(args?: PositionFindRawArgs): Prisma.PrismaPromise<JsonObject>
+
+    /**
+     * Perform aggregation operations on a Position.
+     * @param {PositionAggregateRawArgs} args - Select which aggregations you would like to apply.
+     * @example
+     * const position = await prisma.position.aggregateRaw({
+     *   pipeline: [
+     *     { $match: { status: "registered" } },
+     *     { $group: { _id: "$country", total: { $sum: 1 } } }
+     *   ]
+     * })
+     */
+    aggregateRaw(args?: PositionAggregateRawArgs): Prisma.PrismaPromise<JsonObject>
 
 
     /**
@@ -7078,22 +7180,6 @@ export namespace Prisma {
      * The data used to create many Positions.
      */
     data: PositionCreateManyInput | PositionCreateManyInput[]
-    skipDuplicates?: boolean
-  }
-
-  /**
-   * Position createManyAndReturn
-   */
-  export type PositionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Position
-     */
-    select?: PositionSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * The data used to create many Positions.
-     */
-    data: PositionCreateManyInput | PositionCreateManyInput[]
-    skipDuplicates?: boolean
   }
 
   /**
@@ -7187,6 +7273,34 @@ export namespace Prisma {
   }
 
   /**
+   * Position findRaw
+   */
+  export type PositionFindRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The query predicate filter. If unspecified, then all documents in the collection will match the predicate. ${@link https://docs.mongodb.com/manual/reference/operator/query MongoDB Docs}.
+     */
+    filter?: InputJsonValue
+    /**
+     * Additional options to pass to the `find` command ${@link https://docs.mongodb.com/manual/reference/command/find/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
+  }
+
+  /**
+   * Position aggregateRaw
+   */
+  export type PositionAggregateRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * An array of aggregation stages to process and transform the document stream via the aggregation pipeline. ${@link https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline MongoDB Docs}.
+     */
+    pipeline?: InputJsonValue[]
+    /**
+     * Additional options to pass to the `aggregate` command ${@link https://docs.mongodb.com/manual/reference/command/aggregate/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
+  }
+
+  /**
    * Position.referrals
    */
   export type Position$referralsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -7225,16 +7339,6 @@ export namespace Prisma {
    * Enums
    */
 
-  export const TransactionIsolationLevel: {
-    ReadUncommitted: 'ReadUncommitted',
-    ReadCommitted: 'ReadCommitted',
-    RepeatableRead: 'RepeatableRead',
-    Serializable: 'Serializable'
-  };
-
-  export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
-
-
   export const UserScalarFieldEnum: {
     id: 'id',
     email: 'email',
@@ -7247,7 +7351,12 @@ export namespace Prisma {
     isVerified: 'isVerified',
     otp: 'otp',
     otpExpiry: 'otpExpiry',
-    createdAt: 'createdAt'
+    college: 'college',
+    gradYear: 'gradYear',
+    bio: 'bio',
+    location: 'location',
+    createdAt: 'createdAt',
+    referredById: 'referredById'
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -7287,6 +7396,10 @@ export namespace Prisma {
     candidatePhone: 'candidatePhone',
     resumeUrl: 'resumeUrl',
     notes: 'notes',
+    college: 'college',
+    gradYear: 'gradYear',
+    bio: 'bio',
+    location: 'location',
     status: 'status',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
@@ -7335,14 +7448,6 @@ export namespace Prisma {
   };
 
   export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
-
-
-  export const NullsOrder: {
-    first: 'first',
-    last: 'last'
-  };
-
-  export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 
 
   /**
@@ -7459,7 +7564,14 @@ export namespace Prisma {
     isVerified?: BoolFilter<"User"> | boolean
     otp?: StringNullableFilter<"User"> | string | null
     otpExpiry?: DateTimeNullableFilter<"User"> | Date | string | null
+    college?: StringNullableFilter<"User"> | string | null
+    gradYear?: StringNullableFilter<"User"> | string | null
+    bio?: StringNullableFilter<"User"> | string | null
+    location?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
+    referredById?: StringNullableFilter<"User"> | string | null
+    referredBy?: XOR<UserNullableRelationFilter, UserWhereInput> | null
+    referredUsers?: UserListRelationFilter
     referrals?: ReferralListRelationFilter
   }
 
@@ -7469,13 +7581,20 @@ export namespace Prisma {
     phone?: SortOrder
     employeeId?: SortOrder
     name?: SortOrder
-    department?: SortOrderInput | SortOrder
+    department?: SortOrder
     role?: SortOrder
-    passwordHash?: SortOrderInput | SortOrder
+    passwordHash?: SortOrder
     isVerified?: SortOrder
-    otp?: SortOrderInput | SortOrder
-    otpExpiry?: SortOrderInput | SortOrder
+    otp?: SortOrder
+    otpExpiry?: SortOrder
+    college?: SortOrder
+    gradYear?: SortOrder
+    bio?: SortOrder
+    location?: SortOrder
     createdAt?: SortOrder
+    referredById?: SortOrder
+    referredBy?: UserOrderByWithRelationInput
+    referredUsers?: UserOrderByRelationAggregateInput
     referrals?: ReferralOrderByRelationAggregateInput
   }
 
@@ -7494,7 +7613,14 @@ export namespace Prisma {
     isVerified?: BoolFilter<"User"> | boolean
     otp?: StringNullableFilter<"User"> | string | null
     otpExpiry?: DateTimeNullableFilter<"User"> | Date | string | null
+    college?: StringNullableFilter<"User"> | string | null
+    gradYear?: StringNullableFilter<"User"> | string | null
+    bio?: StringNullableFilter<"User"> | string | null
+    location?: StringNullableFilter<"User"> | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
+    referredById?: StringNullableFilter<"User"> | string | null
+    referredBy?: XOR<UserNullableRelationFilter, UserWhereInput> | null
+    referredUsers?: UserListRelationFilter
     referrals?: ReferralListRelationFilter
   }, "id" | "email" | "phone" | "employeeId">
 
@@ -7504,13 +7630,18 @@ export namespace Prisma {
     phone?: SortOrder
     employeeId?: SortOrder
     name?: SortOrder
-    department?: SortOrderInput | SortOrder
+    department?: SortOrder
     role?: SortOrder
-    passwordHash?: SortOrderInput | SortOrder
+    passwordHash?: SortOrder
     isVerified?: SortOrder
-    otp?: SortOrderInput | SortOrder
-    otpExpiry?: SortOrderInput | SortOrder
+    otp?: SortOrder
+    otpExpiry?: SortOrder
+    college?: SortOrder
+    gradYear?: SortOrder
+    bio?: SortOrder
+    location?: SortOrder
     createdAt?: SortOrder
+    referredById?: SortOrder
     _count?: UserCountOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
     _min?: UserMinOrderByAggregateInput
@@ -7531,7 +7662,12 @@ export namespace Prisma {
     isVerified?: BoolWithAggregatesFilter<"User"> | boolean
     otp?: StringNullableWithAggregatesFilter<"User"> | string | null
     otpExpiry?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+    college?: StringNullableWithAggregatesFilter<"User"> | string | null
+    gradYear?: StringNullableWithAggregatesFilter<"User"> | string | null
+    bio?: StringNullableWithAggregatesFilter<"User"> | string | null
+    location?: StringNullableWithAggregatesFilter<"User"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
+    referredById?: StringNullableWithAggregatesFilter<"User"> | string | null
   }
 
   export type OtpVerificationWhereInput = {
@@ -7616,7 +7752,7 @@ export namespace Prisma {
     to?: SortOrder
     subject?: SortOrder
     body?: SortOrder
-    otp?: SortOrderInput | SortOrder
+    otp?: SortOrder
     sentAt?: SortOrder
     status?: SortOrder
   }
@@ -7639,7 +7775,7 @@ export namespace Prisma {
     to?: SortOrder
     subject?: SortOrder
     body?: SortOrder
-    otp?: SortOrderInput | SortOrder
+    otp?: SortOrder
     sentAt?: SortOrder
     status?: SortOrder
     _count?: EmailLogCountOrderByAggregateInput
@@ -7671,6 +7807,10 @@ export namespace Prisma {
     candidatePhone?: StringFilter<"Referral"> | string
     resumeUrl?: StringNullableFilter<"Referral"> | string | null
     notes?: StringNullableFilter<"Referral"> | string | null
+    college?: StringNullableFilter<"Referral"> | string | null
+    gradYear?: StringNullableFilter<"Referral"> | string | null
+    bio?: StringNullableFilter<"Referral"> | string | null
+    location?: StringNullableFilter<"Referral"> | string | null
     status?: EnumReferralStatusFilter<"Referral"> | $Enums.ReferralStatus
     createdAt?: DateTimeFilter<"Referral"> | Date | string
     updatedAt?: DateTimeFilter<"Referral"> | Date | string
@@ -7687,8 +7827,12 @@ export namespace Prisma {
     candidateName?: SortOrder
     candidateEmail?: SortOrder
     candidatePhone?: SortOrder
-    resumeUrl?: SortOrderInput | SortOrder
-    notes?: SortOrderInput | SortOrder
+    resumeUrl?: SortOrder
+    notes?: SortOrder
+    college?: SortOrder
+    gradYear?: SortOrder
+    bio?: SortOrder
+    location?: SortOrder
     status?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -7710,6 +7854,10 @@ export namespace Prisma {
     candidatePhone?: StringFilter<"Referral"> | string
     resumeUrl?: StringNullableFilter<"Referral"> | string | null
     notes?: StringNullableFilter<"Referral"> | string | null
+    college?: StringNullableFilter<"Referral"> | string | null
+    gradYear?: StringNullableFilter<"Referral"> | string | null
+    bio?: StringNullableFilter<"Referral"> | string | null
+    location?: StringNullableFilter<"Referral"> | string | null
     status?: EnumReferralStatusFilter<"Referral"> | $Enums.ReferralStatus
     createdAt?: DateTimeFilter<"Referral"> | Date | string
     updatedAt?: DateTimeFilter<"Referral"> | Date | string
@@ -7726,8 +7874,12 @@ export namespace Prisma {
     candidateName?: SortOrder
     candidateEmail?: SortOrder
     candidatePhone?: SortOrder
-    resumeUrl?: SortOrderInput | SortOrder
-    notes?: SortOrderInput | SortOrder
+    resumeUrl?: SortOrder
+    notes?: SortOrder
+    college?: SortOrder
+    gradYear?: SortOrder
+    bio?: SortOrder
+    location?: SortOrder
     status?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -7749,6 +7901,10 @@ export namespace Prisma {
     candidatePhone?: StringWithAggregatesFilter<"Referral"> | string
     resumeUrl?: StringNullableWithAggregatesFilter<"Referral"> | string | null
     notes?: StringNullableWithAggregatesFilter<"Referral"> | string | null
+    college?: StringNullableWithAggregatesFilter<"Referral"> | string | null
+    gradYear?: StringNullableWithAggregatesFilter<"Referral"> | string | null
+    bio?: StringNullableWithAggregatesFilter<"Referral"> | string | null
+    location?: StringNullableWithAggregatesFilter<"Referral"> | string | null
     status?: EnumReferralStatusWithAggregatesFilter<"Referral"> | $Enums.ReferralStatus
     createdAt?: DateTimeWithAggregatesFilter<"Referral"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Referral"> | Date | string
@@ -7774,7 +7930,7 @@ export namespace Prisma {
     id?: SortOrder
     fromStatus?: SortOrder
     toStatus?: SortOrder
-    note?: SortOrderInput | SortOrder
+    note?: SortOrder
     createdAt?: SortOrder
     referralId?: SortOrder
     changedBy?: SortOrder
@@ -7799,7 +7955,7 @@ export namespace Prisma {
     id?: SortOrder
     fromStatus?: SortOrder
     toStatus?: SortOrder
-    note?: SortOrderInput | SortOrder
+    note?: SortOrder
     createdAt?: SortOrder
     referralId?: SortOrder
     changedBy?: SortOrder
@@ -7836,29 +7992,29 @@ export namespace Prisma {
   export type PositionOrderByWithRelationInput = {
     id?: SortOrder
     title?: SortOrder
-    department?: SortOrderInput | SortOrder
-    location?: SortOrderInput | SortOrder
+    department?: SortOrder
+    location?: SortOrder
     isActive?: SortOrder
     referrals?: ReferralOrderByRelationAggregateInput
   }
 
   export type PositionWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    title?: string
     AND?: PositionWhereInput | PositionWhereInput[]
     OR?: PositionWhereInput[]
     NOT?: PositionWhereInput | PositionWhereInput[]
-    title?: StringFilter<"Position"> | string
     department?: StringNullableFilter<"Position"> | string | null
     location?: StringNullableFilter<"Position"> | string | null
     isActive?: BoolFilter<"Position"> | boolean
     referrals?: ReferralListRelationFilter
-  }, "id">
+  }, "id" | "title">
 
   export type PositionOrderByWithAggregationInput = {
     id?: SortOrder
     title?: SortOrder
-    department?: SortOrderInput | SortOrder
-    location?: SortOrderInput | SortOrder
+    department?: SortOrder
+    location?: SortOrder
     isActive?: SortOrder
     _count?: PositionCountOrderByAggregateInput
     _max?: PositionMaxOrderByAggregateInput
@@ -7888,7 +8044,13 @@ export namespace Prisma {
     isVerified?: boolean
     otp?: string | null
     otpExpiry?: Date | string | null
+    college?: string | null
+    gradYear?: string | null
+    bio?: string | null
+    location?: string | null
     createdAt?: Date | string
+    referredBy?: UserCreateNestedOneWithoutReferredUsersInput
+    referredUsers?: UserCreateNestedManyWithoutReferredByInput
     referrals?: ReferralCreateNestedManyWithoutReferredByInput
   }
 
@@ -7904,12 +8066,17 @@ export namespace Prisma {
     isVerified?: boolean
     otp?: string | null
     otpExpiry?: Date | string | null
+    college?: string | null
+    gradYear?: string | null
+    bio?: string | null
+    location?: string | null
     createdAt?: Date | string
+    referredById?: string | null
+    referredUsers?: UserUncheckedCreateNestedManyWithoutReferredByInput
     referrals?: ReferralUncheckedCreateNestedManyWithoutReferredByInput
   }
 
   export type UserUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     employeeId?: StringFieldUpdateOperationsInput | string
@@ -7920,12 +8087,17 @@ export namespace Prisma {
     isVerified?: BoolFieldUpdateOperationsInput | boolean
     otp?: NullableStringFieldUpdateOperationsInput | string | null
     otpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referredBy?: UserUpdateOneWithoutReferredUsersNestedInput
+    referredUsers?: UserUpdateManyWithoutReferredByNestedInput
     referrals?: ReferralUpdateManyWithoutReferredByNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     employeeId?: StringFieldUpdateOperationsInput | string
@@ -7936,7 +8108,13 @@ export namespace Prisma {
     isVerified?: BoolFieldUpdateOperationsInput | boolean
     otp?: NullableStringFieldUpdateOperationsInput | string | null
     otpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referredById?: NullableStringFieldUpdateOperationsInput | string | null
+    referredUsers?: UserUncheckedUpdateManyWithoutReferredByNestedInput
     referrals?: ReferralUncheckedUpdateManyWithoutReferredByNestedInput
   }
 
@@ -7952,11 +8130,15 @@ export namespace Prisma {
     isVerified?: boolean
     otp?: string | null
     otpExpiry?: Date | string | null
+    college?: string | null
+    gradYear?: string | null
+    bio?: string | null
+    location?: string | null
     createdAt?: Date | string
+    referredById?: string | null
   }
 
   export type UserUpdateManyMutationInput = {
-    id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     employeeId?: StringFieldUpdateOperationsInput | string
@@ -7967,11 +8149,14 @@ export namespace Prisma {
     isVerified?: BoolFieldUpdateOperationsInput | boolean
     otp?: NullableStringFieldUpdateOperationsInput | string | null
     otpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type UserUncheckedUpdateManyInput = {
-    id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     employeeId?: StringFieldUpdateOperationsInput | string
@@ -7982,7 +8167,12 @@ export namespace Prisma {
     isVerified?: BoolFieldUpdateOperationsInput | boolean
     otp?: NullableStringFieldUpdateOperationsInput | string | null
     otpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referredById?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type OtpVerificationCreateInput = {
@@ -8006,7 +8196,6 @@ export namespace Prisma {
   }
 
   export type OtpVerificationUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     otpHash?: StringFieldUpdateOperationsInput | string
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8016,7 +8205,6 @@ export namespace Prisma {
   }
 
   export type OtpVerificationUncheckedUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     otpHash?: StringFieldUpdateOperationsInput | string
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8036,7 +8224,6 @@ export namespace Prisma {
   }
 
   export type OtpVerificationUpdateManyMutationInput = {
-    id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     otpHash?: StringFieldUpdateOperationsInput | string
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8046,7 +8233,6 @@ export namespace Prisma {
   }
 
   export type OtpVerificationUncheckedUpdateManyInput = {
-    id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     otpHash?: StringFieldUpdateOperationsInput | string
     expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8076,7 +8262,6 @@ export namespace Prisma {
   }
 
   export type EmailLogUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
     to?: StringFieldUpdateOperationsInput | string
     subject?: StringFieldUpdateOperationsInput | string
     body?: StringFieldUpdateOperationsInput | string
@@ -8086,7 +8271,6 @@ export namespace Prisma {
   }
 
   export type EmailLogUncheckedUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
     to?: StringFieldUpdateOperationsInput | string
     subject?: StringFieldUpdateOperationsInput | string
     body?: StringFieldUpdateOperationsInput | string
@@ -8106,7 +8290,6 @@ export namespace Prisma {
   }
 
   export type EmailLogUpdateManyMutationInput = {
-    id?: StringFieldUpdateOperationsInput | string
     to?: StringFieldUpdateOperationsInput | string
     subject?: StringFieldUpdateOperationsInput | string
     body?: StringFieldUpdateOperationsInput | string
@@ -8116,7 +8299,6 @@ export namespace Prisma {
   }
 
   export type EmailLogUncheckedUpdateManyInput = {
-    id?: StringFieldUpdateOperationsInput | string
     to?: StringFieldUpdateOperationsInput | string
     subject?: StringFieldUpdateOperationsInput | string
     body?: StringFieldUpdateOperationsInput | string
@@ -8133,6 +8315,10 @@ export namespace Prisma {
     candidatePhone: string
     resumeUrl?: string | null
     notes?: string | null
+    college?: string | null
+    gradYear?: string | null
+    bio?: string | null
+    location?: string | null
     status?: $Enums.ReferralStatus
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -8149,6 +8335,10 @@ export namespace Prisma {
     candidatePhone: string
     resumeUrl?: string | null
     notes?: string | null
+    college?: string | null
+    gradYear?: string | null
+    bio?: string | null
+    location?: string | null
     status?: $Enums.ReferralStatus
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -8158,13 +8348,16 @@ export namespace Prisma {
   }
 
   export type ReferralUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
     refCode?: StringFieldUpdateOperationsInput | string
     candidateName?: StringFieldUpdateOperationsInput | string
     candidateEmail?: StringFieldUpdateOperationsInput | string
     candidatePhone?: StringFieldUpdateOperationsInput | string
     resumeUrl?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8174,13 +8367,16 @@ export namespace Prisma {
   }
 
   export type ReferralUncheckedUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
     refCode?: StringFieldUpdateOperationsInput | string
     candidateName?: StringFieldUpdateOperationsInput | string
     candidateEmail?: StringFieldUpdateOperationsInput | string
     candidatePhone?: StringFieldUpdateOperationsInput | string
     resumeUrl?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8197,6 +8393,10 @@ export namespace Prisma {
     candidatePhone: string
     resumeUrl?: string | null
     notes?: string | null
+    college?: string | null
+    gradYear?: string | null
+    bio?: string | null
+    location?: string | null
     status?: $Enums.ReferralStatus
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -8205,26 +8405,32 @@ export namespace Prisma {
   }
 
   export type ReferralUpdateManyMutationInput = {
-    id?: StringFieldUpdateOperationsInput | string
     refCode?: StringFieldUpdateOperationsInput | string
     candidateName?: StringFieldUpdateOperationsInput | string
     candidateEmail?: StringFieldUpdateOperationsInput | string
     candidatePhone?: StringFieldUpdateOperationsInput | string
     resumeUrl?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ReferralUncheckedUpdateManyInput = {
-    id?: StringFieldUpdateOperationsInput | string
     refCode?: StringFieldUpdateOperationsInput | string
     candidateName?: StringFieldUpdateOperationsInput | string
     candidateEmail?: StringFieldUpdateOperationsInput | string
     candidatePhone?: StringFieldUpdateOperationsInput | string
     resumeUrl?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8253,7 +8459,6 @@ export namespace Prisma {
   }
 
   export type StatusLogUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
     fromStatus?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     toStatus?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     note?: NullableStringFieldUpdateOperationsInput | string | null
@@ -8263,7 +8468,6 @@ export namespace Prisma {
   }
 
   export type StatusLogUncheckedUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
     fromStatus?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     toStatus?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     note?: NullableStringFieldUpdateOperationsInput | string | null
@@ -8283,7 +8487,6 @@ export namespace Prisma {
   }
 
   export type StatusLogUpdateManyMutationInput = {
-    id?: StringFieldUpdateOperationsInput | string
     fromStatus?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     toStatus?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     note?: NullableStringFieldUpdateOperationsInput | string | null
@@ -8292,7 +8495,6 @@ export namespace Prisma {
   }
 
   export type StatusLogUncheckedUpdateManyInput = {
-    id?: StringFieldUpdateOperationsInput | string
     fromStatus?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     toStatus?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     note?: NullableStringFieldUpdateOperationsInput | string | null
@@ -8320,7 +8522,6 @@ export namespace Prisma {
   }
 
   export type PositionUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     department?: NullableStringFieldUpdateOperationsInput | string | null
     location?: NullableStringFieldUpdateOperationsInput | string | null
@@ -8329,7 +8530,6 @@ export namespace Prisma {
   }
 
   export type PositionUncheckedUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     department?: NullableStringFieldUpdateOperationsInput | string | null
     location?: NullableStringFieldUpdateOperationsInput | string | null
@@ -8346,7 +8546,6 @@ export namespace Prisma {
   }
 
   export type PositionUpdateManyMutationInput = {
-    id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     department?: NullableStringFieldUpdateOperationsInput | string | null
     location?: NullableStringFieldUpdateOperationsInput | string | null
@@ -8354,7 +8553,6 @@ export namespace Prisma {
   }
 
   export type PositionUncheckedUpdateManyInput = {
-    id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     department?: NullableStringFieldUpdateOperationsInput | string | null
     location?: NullableStringFieldUpdateOperationsInput | string | null
@@ -8389,6 +8587,7 @@ export namespace Prisma {
     endsWith?: string | StringFieldRefInput<$PrismaModel>
     mode?: QueryMode
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
+    isSet?: boolean
   }
 
   export type EnumRoleFilter<$PrismaModel = never> = {
@@ -8412,6 +8611,7 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+    isSet?: boolean
   }
 
   export type DateTimeFilter<$PrismaModel = never> = {
@@ -8425,15 +8625,25 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
+  export type UserNullableRelationFilter = {
+    is?: UserWhereInput | null
+    isNot?: UserWhereInput | null
+  }
+
+  export type UserListRelationFilter = {
+    every?: UserWhereInput
+    some?: UserWhereInput
+    none?: UserWhereInput
+  }
+
   export type ReferralListRelationFilter = {
     every?: ReferralWhereInput
     some?: ReferralWhereInput
     none?: ReferralWhereInput
   }
 
-  export type SortOrderInput = {
-    sort: SortOrder
-    nulls?: NullsOrder
+  export type UserOrderByRelationAggregateInput = {
+    _count?: SortOrder
   }
 
   export type ReferralOrderByRelationAggregateInput = {
@@ -8452,7 +8662,12 @@ export namespace Prisma {
     isVerified?: SortOrder
     otp?: SortOrder
     otpExpiry?: SortOrder
+    college?: SortOrder
+    gradYear?: SortOrder
+    bio?: SortOrder
+    location?: SortOrder
     createdAt?: SortOrder
+    referredById?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
@@ -8467,7 +8682,12 @@ export namespace Prisma {
     isVerified?: SortOrder
     otp?: SortOrder
     otpExpiry?: SortOrder
+    college?: SortOrder
+    gradYear?: SortOrder
+    bio?: SortOrder
+    location?: SortOrder
     createdAt?: SortOrder
+    referredById?: SortOrder
   }
 
   export type UserMinOrderByAggregateInput = {
@@ -8482,7 +8702,12 @@ export namespace Prisma {
     isVerified?: SortOrder
     otp?: SortOrder
     otpExpiry?: SortOrder
+    college?: SortOrder
+    gradYear?: SortOrder
+    bio?: SortOrder
+    location?: SortOrder
     createdAt?: SortOrder
+    referredById?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
@@ -8519,6 +8744,7 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
     _max?: NestedStringNullableFilter<$PrismaModel>
+    isSet?: boolean
   }
 
   export type EnumRoleWithAggregatesFilter<$PrismaModel = never> = {
@@ -8551,6 +8777,7 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedDateTimeNullableFilter<$PrismaModel>
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
+    isSet?: boolean
   }
 
   export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
@@ -8697,6 +8924,10 @@ export namespace Prisma {
     candidatePhone?: SortOrder
     resumeUrl?: SortOrder
     notes?: SortOrder
+    college?: SortOrder
+    gradYear?: SortOrder
+    bio?: SortOrder
+    location?: SortOrder
     status?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -8712,6 +8943,10 @@ export namespace Prisma {
     candidatePhone?: SortOrder
     resumeUrl?: SortOrder
     notes?: SortOrder
+    college?: SortOrder
+    gradYear?: SortOrder
+    bio?: SortOrder
+    location?: SortOrder
     status?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -8727,6 +8962,10 @@ export namespace Prisma {
     candidatePhone?: SortOrder
     resumeUrl?: SortOrder
     notes?: SortOrder
+    college?: SortOrder
+    gradYear?: SortOrder
+    bio?: SortOrder
+    location?: SortOrder
     status?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -8803,11 +9042,31 @@ export namespace Prisma {
     isActive?: SortOrder
   }
 
+  export type UserCreateNestedOneWithoutReferredUsersInput = {
+    create?: XOR<UserCreateWithoutReferredUsersInput, UserUncheckedCreateWithoutReferredUsersInput>
+    connectOrCreate?: UserCreateOrConnectWithoutReferredUsersInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserCreateNestedManyWithoutReferredByInput = {
+    create?: XOR<UserCreateWithoutReferredByInput, UserUncheckedCreateWithoutReferredByInput> | UserCreateWithoutReferredByInput[] | UserUncheckedCreateWithoutReferredByInput[]
+    connectOrCreate?: UserCreateOrConnectWithoutReferredByInput | UserCreateOrConnectWithoutReferredByInput[]
+    createMany?: UserCreateManyReferredByInputEnvelope
+    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+  }
+
   export type ReferralCreateNestedManyWithoutReferredByInput = {
     create?: XOR<ReferralCreateWithoutReferredByInput, ReferralUncheckedCreateWithoutReferredByInput> | ReferralCreateWithoutReferredByInput[] | ReferralUncheckedCreateWithoutReferredByInput[]
     connectOrCreate?: ReferralCreateOrConnectWithoutReferredByInput | ReferralCreateOrConnectWithoutReferredByInput[]
     createMany?: ReferralCreateManyReferredByInputEnvelope
     connect?: ReferralWhereUniqueInput | ReferralWhereUniqueInput[]
+  }
+
+  export type UserUncheckedCreateNestedManyWithoutReferredByInput = {
+    create?: XOR<UserCreateWithoutReferredByInput, UserUncheckedCreateWithoutReferredByInput> | UserCreateWithoutReferredByInput[] | UserUncheckedCreateWithoutReferredByInput[]
+    connectOrCreate?: UserCreateOrConnectWithoutReferredByInput | UserCreateOrConnectWithoutReferredByInput[]
+    createMany?: UserCreateManyReferredByInputEnvelope
+    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
   }
 
   export type ReferralUncheckedCreateNestedManyWithoutReferredByInput = {
@@ -8823,6 +9082,7 @@ export namespace Prisma {
 
   export type NullableStringFieldUpdateOperationsInput = {
     set?: string | null
+    unset?: boolean
   }
 
   export type EnumRoleFieldUpdateOperationsInput = {
@@ -8835,10 +9095,35 @@ export namespace Prisma {
 
   export type NullableDateTimeFieldUpdateOperationsInput = {
     set?: Date | string | null
+    unset?: boolean
   }
 
   export type DateTimeFieldUpdateOperationsInput = {
     set?: Date | string
+  }
+
+  export type UserUpdateOneWithoutReferredUsersNestedInput = {
+    create?: XOR<UserCreateWithoutReferredUsersInput, UserUncheckedCreateWithoutReferredUsersInput>
+    connectOrCreate?: UserCreateOrConnectWithoutReferredUsersInput
+    upsert?: UserUpsertWithoutReferredUsersInput
+    disconnect?: boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutReferredUsersInput, UserUpdateWithoutReferredUsersInput>, UserUncheckedUpdateWithoutReferredUsersInput>
+  }
+
+  export type UserUpdateManyWithoutReferredByNestedInput = {
+    create?: XOR<UserCreateWithoutReferredByInput, UserUncheckedCreateWithoutReferredByInput> | UserCreateWithoutReferredByInput[] | UserUncheckedCreateWithoutReferredByInput[]
+    connectOrCreate?: UserCreateOrConnectWithoutReferredByInput | UserCreateOrConnectWithoutReferredByInput[]
+    upsert?: UserUpsertWithWhereUniqueWithoutReferredByInput | UserUpsertWithWhereUniqueWithoutReferredByInput[]
+    createMany?: UserCreateManyReferredByInputEnvelope
+    set?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    disconnect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    delete?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    update?: UserUpdateWithWhereUniqueWithoutReferredByInput | UserUpdateWithWhereUniqueWithoutReferredByInput[]
+    updateMany?: UserUpdateManyWithWhereWithoutReferredByInput | UserUpdateManyWithWhereWithoutReferredByInput[]
+    deleteMany?: UserScalarWhereInput | UserScalarWhereInput[]
   }
 
   export type ReferralUpdateManyWithoutReferredByNestedInput = {
@@ -8853,6 +9138,20 @@ export namespace Prisma {
     update?: ReferralUpdateWithWhereUniqueWithoutReferredByInput | ReferralUpdateWithWhereUniqueWithoutReferredByInput[]
     updateMany?: ReferralUpdateManyWithWhereWithoutReferredByInput | ReferralUpdateManyWithWhereWithoutReferredByInput[]
     deleteMany?: ReferralScalarWhereInput | ReferralScalarWhereInput[]
+  }
+
+  export type UserUncheckedUpdateManyWithoutReferredByNestedInput = {
+    create?: XOR<UserCreateWithoutReferredByInput, UserUncheckedCreateWithoutReferredByInput> | UserCreateWithoutReferredByInput[] | UserUncheckedCreateWithoutReferredByInput[]
+    connectOrCreate?: UserCreateOrConnectWithoutReferredByInput | UserCreateOrConnectWithoutReferredByInput[]
+    upsert?: UserUpsertWithWhereUniqueWithoutReferredByInput | UserUpsertWithWhereUniqueWithoutReferredByInput[]
+    createMany?: UserCreateManyReferredByInputEnvelope
+    set?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    disconnect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    delete?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
+    update?: UserUpdateWithWhereUniqueWithoutReferredByInput | UserUpdateWithWhereUniqueWithoutReferredByInput[]
+    updateMany?: UserUpdateManyWithWhereWithoutReferredByInput | UserUpdateManyWithWhereWithoutReferredByInput[]
+    deleteMany?: UserScalarWhereInput | UserScalarWhereInput[]
   }
 
   export type ReferralUncheckedUpdateManyWithoutReferredByNestedInput = {
@@ -9033,6 +9332,7 @@ export namespace Prisma {
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
+    isSet?: boolean
   }
 
   export type NestedEnumRoleFilter<$PrismaModel = never> = {
@@ -9056,6 +9356,7 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+    isSet?: boolean
   }
 
   export type NestedDateTimeFilter<$PrismaModel = never> = {
@@ -9112,6 +9413,7 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
     _max?: NestedStringNullableFilter<$PrismaModel>
+    isSet?: boolean
   }
 
   export type NestedIntNullableFilter<$PrismaModel = never> = {
@@ -9123,6 +9425,7 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
+    isSet?: boolean
   }
 
   export type NestedEnumRoleWithAggregatesFilter<$PrismaModel = never> = {
@@ -9155,6 +9458,7 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedDateTimeNullableFilter<$PrismaModel>
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
+    isSet?: boolean
   }
 
   export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
@@ -9215,6 +9519,104 @@ export namespace Prisma {
     _max?: NestedEnumReferralStatusFilter<$PrismaModel>
   }
 
+  export type UserCreateWithoutReferredUsersInput = {
+    id?: string
+    email: string
+    phone: string
+    employeeId: string
+    name: string
+    department?: string | null
+    role?: $Enums.Role
+    passwordHash?: string | null
+    isVerified?: boolean
+    otp?: string | null
+    otpExpiry?: Date | string | null
+    college?: string | null
+    gradYear?: string | null
+    bio?: string | null
+    location?: string | null
+    createdAt?: Date | string
+    referredBy?: UserCreateNestedOneWithoutReferredUsersInput
+    referrals?: ReferralCreateNestedManyWithoutReferredByInput
+  }
+
+  export type UserUncheckedCreateWithoutReferredUsersInput = {
+    id?: string
+    email: string
+    phone: string
+    employeeId: string
+    name: string
+    department?: string | null
+    role?: $Enums.Role
+    passwordHash?: string | null
+    isVerified?: boolean
+    otp?: string | null
+    otpExpiry?: Date | string | null
+    college?: string | null
+    gradYear?: string | null
+    bio?: string | null
+    location?: string | null
+    createdAt?: Date | string
+    referredById?: string | null
+    referrals?: ReferralUncheckedCreateNestedManyWithoutReferredByInput
+  }
+
+  export type UserCreateOrConnectWithoutReferredUsersInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutReferredUsersInput, UserUncheckedCreateWithoutReferredUsersInput>
+  }
+
+  export type UserCreateWithoutReferredByInput = {
+    id?: string
+    email: string
+    phone: string
+    employeeId: string
+    name: string
+    department?: string | null
+    role?: $Enums.Role
+    passwordHash?: string | null
+    isVerified?: boolean
+    otp?: string | null
+    otpExpiry?: Date | string | null
+    college?: string | null
+    gradYear?: string | null
+    bio?: string | null
+    location?: string | null
+    createdAt?: Date | string
+    referredUsers?: UserCreateNestedManyWithoutReferredByInput
+    referrals?: ReferralCreateNestedManyWithoutReferredByInput
+  }
+
+  export type UserUncheckedCreateWithoutReferredByInput = {
+    id?: string
+    email: string
+    phone: string
+    employeeId: string
+    name: string
+    department?: string | null
+    role?: $Enums.Role
+    passwordHash?: string | null
+    isVerified?: boolean
+    otp?: string | null
+    otpExpiry?: Date | string | null
+    college?: string | null
+    gradYear?: string | null
+    bio?: string | null
+    location?: string | null
+    createdAt?: Date | string
+    referredUsers?: UserUncheckedCreateNestedManyWithoutReferredByInput
+    referrals?: ReferralUncheckedCreateNestedManyWithoutReferredByInput
+  }
+
+  export type UserCreateOrConnectWithoutReferredByInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutReferredByInput, UserUncheckedCreateWithoutReferredByInput>
+  }
+
+  export type UserCreateManyReferredByInputEnvelope = {
+    data: UserCreateManyReferredByInput | UserCreateManyReferredByInput[]
+  }
+
   export type ReferralCreateWithoutReferredByInput = {
     id?: string
     refCode?: string
@@ -9223,6 +9625,10 @@ export namespace Prisma {
     candidatePhone: string
     resumeUrl?: string | null
     notes?: string | null
+    college?: string | null
+    gradYear?: string | null
+    bio?: string | null
+    location?: string | null
     status?: $Enums.ReferralStatus
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -9238,6 +9644,10 @@ export namespace Prisma {
     candidatePhone: string
     resumeUrl?: string | null
     notes?: string | null
+    college?: string | null
+    gradYear?: string | null
+    bio?: string | null
+    location?: string | null
     status?: $Enums.ReferralStatus
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -9252,7 +9662,96 @@ export namespace Prisma {
 
   export type ReferralCreateManyReferredByInputEnvelope = {
     data: ReferralCreateManyReferredByInput | ReferralCreateManyReferredByInput[]
-    skipDuplicates?: boolean
+  }
+
+  export type UserUpsertWithoutReferredUsersInput = {
+    update: XOR<UserUpdateWithoutReferredUsersInput, UserUncheckedUpdateWithoutReferredUsersInput>
+    create: XOR<UserCreateWithoutReferredUsersInput, UserUncheckedCreateWithoutReferredUsersInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutReferredUsersInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutReferredUsersInput, UserUncheckedUpdateWithoutReferredUsersInput>
+  }
+
+  export type UserUpdateWithoutReferredUsersInput = {
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    employeeId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    department?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    otp?: NullableStringFieldUpdateOperationsInput | string | null
+    otpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referredBy?: UserUpdateOneWithoutReferredUsersNestedInput
+    referrals?: ReferralUpdateManyWithoutReferredByNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutReferredUsersInput = {
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    employeeId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    department?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    otp?: NullableStringFieldUpdateOperationsInput | string | null
+    otpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referredById?: NullableStringFieldUpdateOperationsInput | string | null
+    referrals?: ReferralUncheckedUpdateManyWithoutReferredByNestedInput
+  }
+
+  export type UserUpsertWithWhereUniqueWithoutReferredByInput = {
+    where: UserWhereUniqueInput
+    update: XOR<UserUpdateWithoutReferredByInput, UserUncheckedUpdateWithoutReferredByInput>
+    create: XOR<UserCreateWithoutReferredByInput, UserUncheckedCreateWithoutReferredByInput>
+  }
+
+  export type UserUpdateWithWhereUniqueWithoutReferredByInput = {
+    where: UserWhereUniqueInput
+    data: XOR<UserUpdateWithoutReferredByInput, UserUncheckedUpdateWithoutReferredByInput>
+  }
+
+  export type UserUpdateManyWithWhereWithoutReferredByInput = {
+    where: UserScalarWhereInput
+    data: XOR<UserUpdateManyMutationInput, UserUncheckedUpdateManyWithoutReferredByInput>
+  }
+
+  export type UserScalarWhereInput = {
+    AND?: UserScalarWhereInput | UserScalarWhereInput[]
+    OR?: UserScalarWhereInput[]
+    NOT?: UserScalarWhereInput | UserScalarWhereInput[]
+    id?: StringFilter<"User"> | string
+    email?: StringFilter<"User"> | string
+    phone?: StringFilter<"User"> | string
+    employeeId?: StringFilter<"User"> | string
+    name?: StringFilter<"User"> | string
+    department?: StringNullableFilter<"User"> | string | null
+    role?: EnumRoleFilter<"User"> | $Enums.Role
+    passwordHash?: StringNullableFilter<"User"> | string | null
+    isVerified?: BoolFilter<"User"> | boolean
+    otp?: StringNullableFilter<"User"> | string | null
+    otpExpiry?: DateTimeNullableFilter<"User"> | Date | string | null
+    college?: StringNullableFilter<"User"> | string | null
+    gradYear?: StringNullableFilter<"User"> | string | null
+    bio?: StringNullableFilter<"User"> | string | null
+    location?: StringNullableFilter<"User"> | string | null
+    createdAt?: DateTimeFilter<"User"> | Date | string
+    referredById?: StringNullableFilter<"User"> | string | null
   }
 
   export type ReferralUpsertWithWhereUniqueWithoutReferredByInput = {
@@ -9282,6 +9781,10 @@ export namespace Prisma {
     candidatePhone?: StringFilter<"Referral"> | string
     resumeUrl?: StringNullableFilter<"Referral"> | string | null
     notes?: StringNullableFilter<"Referral"> | string | null
+    college?: StringNullableFilter<"Referral"> | string | null
+    gradYear?: StringNullableFilter<"Referral"> | string | null
+    bio?: StringNullableFilter<"Referral"> | string | null
+    location?: StringNullableFilter<"Referral"> | string | null
     status?: EnumReferralStatusFilter<"Referral"> | $Enums.ReferralStatus
     createdAt?: DateTimeFilter<"Referral"> | Date | string
     updatedAt?: DateTimeFilter<"Referral"> | Date | string
@@ -9322,7 +9825,13 @@ export namespace Prisma {
     isVerified?: boolean
     otp?: string | null
     otpExpiry?: Date | string | null
+    college?: string | null
+    gradYear?: string | null
+    bio?: string | null
+    location?: string | null
     createdAt?: Date | string
+    referredBy?: UserCreateNestedOneWithoutReferredUsersInput
+    referredUsers?: UserCreateNestedManyWithoutReferredByInput
   }
 
   export type UserUncheckedCreateWithoutReferralsInput = {
@@ -9337,7 +9846,13 @@ export namespace Prisma {
     isVerified?: boolean
     otp?: string | null
     otpExpiry?: Date | string | null
+    college?: string | null
+    gradYear?: string | null
+    bio?: string | null
+    location?: string | null
     createdAt?: Date | string
+    referredById?: string | null
+    referredUsers?: UserUncheckedCreateNestedManyWithoutReferredByInput
   }
 
   export type UserCreateOrConnectWithoutReferralsInput = {
@@ -9370,7 +9885,6 @@ export namespace Prisma {
 
   export type StatusLogCreateManyReferralInputEnvelope = {
     data: StatusLogCreateManyReferralInput | StatusLogCreateManyReferralInput[]
-    skipDuplicates?: boolean
   }
 
   export type PositionUpsertWithoutReferralsInput = {
@@ -9385,7 +9899,6 @@ export namespace Prisma {
   }
 
   export type PositionUpdateWithoutReferralsInput = {
-    id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     department?: NullableStringFieldUpdateOperationsInput | string | null
     location?: NullableStringFieldUpdateOperationsInput | string | null
@@ -9393,7 +9906,6 @@ export namespace Prisma {
   }
 
   export type PositionUncheckedUpdateWithoutReferralsInput = {
-    id?: StringFieldUpdateOperationsInput | string
     title?: StringFieldUpdateOperationsInput | string
     department?: NullableStringFieldUpdateOperationsInput | string | null
     location?: NullableStringFieldUpdateOperationsInput | string | null
@@ -9412,7 +9924,6 @@ export namespace Prisma {
   }
 
   export type UserUpdateWithoutReferralsInput = {
-    id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     employeeId?: StringFieldUpdateOperationsInput | string
@@ -9423,11 +9934,16 @@ export namespace Prisma {
     isVerified?: BoolFieldUpdateOperationsInput | boolean
     otp?: NullableStringFieldUpdateOperationsInput | string | null
     otpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referredBy?: UserUpdateOneWithoutReferredUsersNestedInput
+    referredUsers?: UserUpdateManyWithoutReferredByNestedInput
   }
 
   export type UserUncheckedUpdateWithoutReferralsInput = {
-    id?: StringFieldUpdateOperationsInput | string
     email?: StringFieldUpdateOperationsInput | string
     phone?: StringFieldUpdateOperationsInput | string
     employeeId?: StringFieldUpdateOperationsInput | string
@@ -9438,7 +9954,13 @@ export namespace Prisma {
     isVerified?: BoolFieldUpdateOperationsInput | boolean
     otp?: NullableStringFieldUpdateOperationsInput | string | null
     otpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referredById?: NullableStringFieldUpdateOperationsInput | string | null
+    referredUsers?: UserUncheckedUpdateManyWithoutReferredByNestedInput
   }
 
   export type StatusLogUpsertWithWhereUniqueWithoutReferralInput = {
@@ -9478,6 +10000,10 @@ export namespace Prisma {
     candidatePhone: string
     resumeUrl?: string | null
     notes?: string | null
+    college?: string | null
+    gradYear?: string | null
+    bio?: string | null
+    location?: string | null
     status?: $Enums.ReferralStatus
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -9493,6 +10019,10 @@ export namespace Prisma {
     candidatePhone: string
     resumeUrl?: string | null
     notes?: string | null
+    college?: string | null
+    gradYear?: string | null
+    bio?: string | null
+    location?: string | null
     status?: $Enums.ReferralStatus
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -9517,13 +10047,16 @@ export namespace Prisma {
   }
 
   export type ReferralUpdateWithoutStatusHistoryInput = {
-    id?: StringFieldUpdateOperationsInput | string
     refCode?: StringFieldUpdateOperationsInput | string
     candidateName?: StringFieldUpdateOperationsInput | string
     candidateEmail?: StringFieldUpdateOperationsInput | string
     candidatePhone?: StringFieldUpdateOperationsInput | string
     resumeUrl?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -9532,13 +10065,16 @@ export namespace Prisma {
   }
 
   export type ReferralUncheckedUpdateWithoutStatusHistoryInput = {
-    id?: StringFieldUpdateOperationsInput | string
     refCode?: StringFieldUpdateOperationsInput | string
     candidateName?: StringFieldUpdateOperationsInput | string
     candidateEmail?: StringFieldUpdateOperationsInput | string
     candidatePhone?: StringFieldUpdateOperationsInput | string
     resumeUrl?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -9554,6 +10090,10 @@ export namespace Prisma {
     candidatePhone: string
     resumeUrl?: string | null
     notes?: string | null
+    college?: string | null
+    gradYear?: string | null
+    bio?: string | null
+    location?: string | null
     status?: $Enums.ReferralStatus
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -9569,6 +10109,10 @@ export namespace Prisma {
     candidatePhone: string
     resumeUrl?: string | null
     notes?: string | null
+    college?: string | null
+    gradYear?: string | null
+    bio?: string | null
+    location?: string | null
     status?: $Enums.ReferralStatus
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -9583,7 +10127,6 @@ export namespace Prisma {
 
   export type ReferralCreateManyPositionInputEnvelope = {
     data: ReferralCreateManyPositionInput | ReferralCreateManyPositionInput[]
-    skipDuplicates?: boolean
   }
 
   export type ReferralUpsertWithWhereUniqueWithoutPositionInput = {
@@ -9602,6 +10145,25 @@ export namespace Prisma {
     data: XOR<ReferralUpdateManyMutationInput, ReferralUncheckedUpdateManyWithoutPositionInput>
   }
 
+  export type UserCreateManyReferredByInput = {
+    id?: string
+    email: string
+    phone: string
+    employeeId: string
+    name: string
+    department?: string | null
+    role?: $Enums.Role
+    passwordHash?: string | null
+    isVerified?: boolean
+    otp?: string | null
+    otpExpiry?: Date | string | null
+    college?: string | null
+    gradYear?: string | null
+    bio?: string | null
+    location?: string | null
+    createdAt?: Date | string
+  }
+
   export type ReferralCreateManyReferredByInput = {
     id?: string
     refCode?: string
@@ -9610,20 +10172,85 @@ export namespace Prisma {
     candidatePhone: string
     resumeUrl?: string | null
     notes?: string | null
+    college?: string | null
+    gradYear?: string | null
+    bio?: string | null
+    location?: string | null
     status?: $Enums.ReferralStatus
     createdAt?: Date | string
     updatedAt?: Date | string
     positionId: string
   }
 
+  export type UserUpdateWithoutReferredByInput = {
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    employeeId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    department?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    otp?: NullableStringFieldUpdateOperationsInput | string | null
+    otpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referredUsers?: UserUpdateManyWithoutReferredByNestedInput
+    referrals?: ReferralUpdateManyWithoutReferredByNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutReferredByInput = {
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    employeeId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    department?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    otp?: NullableStringFieldUpdateOperationsInput | string | null
+    otpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    referredUsers?: UserUncheckedUpdateManyWithoutReferredByNestedInput
+    referrals?: ReferralUncheckedUpdateManyWithoutReferredByNestedInput
+  }
+
+  export type UserUncheckedUpdateManyWithoutReferredByInput = {
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: StringFieldUpdateOperationsInput | string
+    employeeId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    department?: NullableStringFieldUpdateOperationsInput | string | null
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    passwordHash?: NullableStringFieldUpdateOperationsInput | string | null
+    isVerified?: BoolFieldUpdateOperationsInput | boolean
+    otp?: NullableStringFieldUpdateOperationsInput | string | null
+    otpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type ReferralUpdateWithoutReferredByInput = {
-    id?: StringFieldUpdateOperationsInput | string
     refCode?: StringFieldUpdateOperationsInput | string
     candidateName?: StringFieldUpdateOperationsInput | string
     candidateEmail?: StringFieldUpdateOperationsInput | string
     candidatePhone?: StringFieldUpdateOperationsInput | string
     resumeUrl?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -9632,13 +10259,16 @@ export namespace Prisma {
   }
 
   export type ReferralUncheckedUpdateWithoutReferredByInput = {
-    id?: StringFieldUpdateOperationsInput | string
     refCode?: StringFieldUpdateOperationsInput | string
     candidateName?: StringFieldUpdateOperationsInput | string
     candidateEmail?: StringFieldUpdateOperationsInput | string
     candidatePhone?: StringFieldUpdateOperationsInput | string
     resumeUrl?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -9647,13 +10277,16 @@ export namespace Prisma {
   }
 
   export type ReferralUncheckedUpdateManyWithoutReferredByInput = {
-    id?: StringFieldUpdateOperationsInput | string
     refCode?: StringFieldUpdateOperationsInput | string
     candidateName?: StringFieldUpdateOperationsInput | string
     candidateEmail?: StringFieldUpdateOperationsInput | string
     candidatePhone?: StringFieldUpdateOperationsInput | string
     resumeUrl?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -9670,7 +10303,6 @@ export namespace Prisma {
   }
 
   export type StatusLogUpdateWithoutReferralInput = {
-    id?: StringFieldUpdateOperationsInput | string
     fromStatus?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     toStatus?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     note?: NullableStringFieldUpdateOperationsInput | string | null
@@ -9679,7 +10311,6 @@ export namespace Prisma {
   }
 
   export type StatusLogUncheckedUpdateWithoutReferralInput = {
-    id?: StringFieldUpdateOperationsInput | string
     fromStatus?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     toStatus?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     note?: NullableStringFieldUpdateOperationsInput | string | null
@@ -9688,7 +10319,6 @@ export namespace Prisma {
   }
 
   export type StatusLogUncheckedUpdateManyWithoutReferralInput = {
-    id?: StringFieldUpdateOperationsInput | string
     fromStatus?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     toStatus?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     note?: NullableStringFieldUpdateOperationsInput | string | null
@@ -9704,6 +10334,10 @@ export namespace Prisma {
     candidatePhone: string
     resumeUrl?: string | null
     notes?: string | null
+    college?: string | null
+    gradYear?: string | null
+    bio?: string | null
+    location?: string | null
     status?: $Enums.ReferralStatus
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -9711,13 +10345,16 @@ export namespace Prisma {
   }
 
   export type ReferralUpdateWithoutPositionInput = {
-    id?: StringFieldUpdateOperationsInput | string
     refCode?: StringFieldUpdateOperationsInput | string
     candidateName?: StringFieldUpdateOperationsInput | string
     candidateEmail?: StringFieldUpdateOperationsInput | string
     candidatePhone?: StringFieldUpdateOperationsInput | string
     resumeUrl?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -9726,13 +10363,16 @@ export namespace Prisma {
   }
 
   export type ReferralUncheckedUpdateWithoutPositionInput = {
-    id?: StringFieldUpdateOperationsInput | string
     refCode?: StringFieldUpdateOperationsInput | string
     candidateName?: StringFieldUpdateOperationsInput | string
     candidateEmail?: StringFieldUpdateOperationsInput | string
     candidatePhone?: StringFieldUpdateOperationsInput | string
     resumeUrl?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -9741,13 +10381,16 @@ export namespace Prisma {
   }
 
   export type ReferralUncheckedUpdateManyWithoutPositionInput = {
-    id?: StringFieldUpdateOperationsInput | string
     refCode?: StringFieldUpdateOperationsInput | string
     candidateName?: StringFieldUpdateOperationsInput | string
     candidateEmail?: StringFieldUpdateOperationsInput | string
     candidatePhone?: StringFieldUpdateOperationsInput | string
     resumeUrl?: NullableStringFieldUpdateOperationsInput | string | null
     notes?: NullableStringFieldUpdateOperationsInput | string | null
+    college?: NullableStringFieldUpdateOperationsInput | string | null
+    gradYear?: NullableStringFieldUpdateOperationsInput | string | null
+    bio?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
     status?: EnumReferralStatusFieldUpdateOperationsInput | $Enums.ReferralStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

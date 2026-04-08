@@ -8,11 +8,12 @@ import BallBackground from '../../../components/ui/BallBackground';
 import toast from 'react-hot-toast';
 
 export default function NewReferralPage() {
-  const { addReferral, isAuthenticated, positions, user, refreshData } = useAppContext();
+  const { addReferral, isAuthenticated, positions, user, refreshData, uploadFile } = useAppContext();
   const router = useRouter();
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resumeName, setResumeName] = useState('');
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [form, setForm] = useState({
     candidateName: '', candidateEmail: '', candidatePhone: '',
     positionId: '', notes: '',
@@ -30,11 +31,20 @@ export default function NewReferralPage() {
     }
   }, [positions, form.positionId]);
 
+  useEffect(() => {
+    if (isAuthenticated && positions.length === 0) {
+      refreshData();
+    }
+  }, [isAuthenticated, positions.length, refreshData]);
+
   const update = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) setResumeName(file.name);
+    if (file) {
+      setResumeName(file.name);
+      setResumeFile(file);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,12 +54,29 @@ export default function NewReferralPage() {
       router.push('/auth/login'); 
       return; 
     }
+
+    if (!form.positionId) {
+      toast.error('Please select a job stack.');
+      return;
+    }
     
     setLoading(true);
     try {
+      let finalResumeUrl = undefined;
+      if (resumeFile) {
+        toast.loading('Uploading resume...', { id: 'upload' });
+        const uploadedUrl = await uploadFile(resumeFile);
+        if (uploadedUrl) {
+          finalResumeUrl = uploadedUrl;
+          toast.success('Resume uploaded!', { id: 'upload' });
+        } else {
+          toast.error('Resume upload failed, continuing without it', { id: 'upload' });
+        }
+      }
+
       const success = await addReferral({
         ...form,
-        resumeUrl: resumeName || undefined,
+        resumeUrl: finalResumeUrl,
       });
       if (success) {
         await refreshData();
@@ -111,7 +138,8 @@ export default function NewReferralPage() {
               </div>
               <div className="space-y-3">
                 <label className="text-[10px] font-black uppercase tracking-[0.3em] text-[#2B1D1C]/60 ml-2">Job Stack</label>
-                <select value={form.positionId} onChange={e => update('positionId', e.target.value)} className="w-full px-8 py-5 rounded-3xl bg-white/50 border-2 border-transparent focus:border-[#861C1C]/20 outline-none font-bold text-[#2B1D1C] appearance-none cursor-pointer">
+                <select value={form.positionId} onChange={e => update('positionId', e.target.value)} className="w-full px-8 py-5 rounded-3xl bg-white/50 border-2 border-transparent focus:border-[#861C1C]/20 outline-none font-bold text-[#2B1D1C] appearance-none cursor-pointer" required>
+                  <option value="" disabled>{positions.length === 0 ? 'Loading job stacks...' : 'Select job stack'}</option>
                   {positions.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
                 </select>
               </div>
@@ -155,7 +183,7 @@ export default function NewReferralPage() {
               </label>
             </div>
 
-            <button type="submit" disabled={loading} className="w-full py-6 rounded-[30px] bg-[#861C1C] text-white font-black uppercase text-sm tracking-[0.3em] hover:bg-[#6b1616] transition-all transform hover:-translate-y-1 shadow-2xl shadow-[#861C1C]/20 disabled:opacity-50">
+            <button type="submit" disabled={loading || positions.length === 0 || !form.positionId} className="w-full py-6 rounded-[30px] bg-[#861C1C] text-white font-black uppercase text-sm tracking-[0.3em] hover:bg-[#6b1616] transition-all transform hover:-translate-y-1 shadow-2xl shadow-[#861C1C]/20 disabled:opacity-50 disabled:cursor-not-allowed">
               {loading ? 'Processing Registry...' : 'Initiate Referral'}
             </button>
           </form>
