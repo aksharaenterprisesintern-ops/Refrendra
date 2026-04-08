@@ -111,7 +111,7 @@ function DetailPanel({ referral, onClose, onStatusChange, onDelete, onUpdate }: 
 }
 
 export default function AdminDashboardPage() {
-  const { user, isAuthenticated, referrals, updateStatus, updateReferral, deleteReferral, logout, bulkImport } = useAppContext();
+  const { user, isAuthenticated, hydrated, referrals, updateStatus, updateReferral, deleteReferral, logout, bulkImport } = useAppContext();
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ReferralStatus | 'ALL'>('ALL');
@@ -119,12 +119,13 @@ export default function AdminDashboardPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
+    if (!hydrated) return;
     if (typeof window !== 'undefined' && !isAuthenticated) {
       router.push('/admin/login');
     } else if (user && user.role !== 'ADMIN' && user.role !== 'HR') {
       router.push('/dashboard');
     }
-  }, [isAuthenticated, user, router]);
+  }, [hydrated, isAuthenticated, user, router]);
 
   const filtered = useMemo(() => {
     return referrals.filter(r => {
@@ -155,6 +156,7 @@ export default function AdminDashboardPage() {
     link.click();
   };
 
+  if (!hydrated) return null;
   if (!isAuthenticated || (user?.role !== 'ADMIN' && user?.role !== 'HR')) return null;
 
   return (

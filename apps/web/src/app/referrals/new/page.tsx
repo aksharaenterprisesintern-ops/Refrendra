@@ -8,7 +8,7 @@ import BallBackground from '../../../components/ui/BallBackground';
 import toast from 'react-hot-toast';
 
 export default function NewReferralPage() {
-  const { addReferral, isAuthenticated, positions, user, refreshData, uploadFile } = useAppContext();
+  const { addReferral, isAuthenticated, hydrated, positions, user, refreshData, uploadFile } = useAppContext();
   const router = useRouter();
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -20,10 +20,11 @@ export default function NewReferralPage() {
   });
 
   useEffect(() => {
+    if (!hydrated) return;
     if (!isAuthenticated && typeof window !== 'undefined') {
       router.push('/auth/login');
     }
-  }, [isAuthenticated, router]);
+  }, [hydrated, isAuthenticated, router]);
 
   useEffect(() => {
     if (positions.length > 0 && !form.positionId) {
@@ -114,6 +115,10 @@ export default function NewReferralPage() {
         </div>
       </main>
     );
+  }
+
+  if (!hydrated) {
+    return null;
   }
 
   return (

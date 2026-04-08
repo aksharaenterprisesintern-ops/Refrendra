@@ -45,6 +45,7 @@ interface AppContextType {
   /* Auth */
   user: User | null;
   isAuthenticated: boolean;
+  hydrated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   sendOtp: (email: string) => Promise<boolean>;
   verifyOtp: (email: string, otp: string) => Promise<boolean>;
@@ -290,7 +291,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   return (
     <AppContext.Provider value={{
-      user, isAuthenticated: !!user, login, sendOtp, verifyOtp, register_user, logout,
+      user, isAuthenticated: !!user, hydrated, login, sendOtp, verifyOtp, register_user, logout,
       referrals, myReferrals, addReferral, updateStatus, updateReferral, deleteReferral,
       positions,
       refreshData: async () => { await fetchData(user); await fetchReferredUsers(); },

@@ -20,19 +20,20 @@ function StatusBadge({ status }: { status: ReferralStatus }) {
 }
 
 export default function DashboardPage() {
-  const { user, isAuthenticated, myReferrals, positions } = useAppContext();
+  const { user, isAuthenticated, hydrated, myReferrals, positions } = useAppContext();
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<ReferralStatus | 'ALL'>('ALL');
   const [positionFilter, setPositionFilter] = useState('ALL');
 
   useEffect(() => {
+    if (!hydrated) return;
     if (typeof window !== 'undefined' && !isAuthenticated) {
       router.push('/auth/login');
     } else if (user?.role === 'ADMIN' || user?.role === 'HR') {
       router.push('/admin');
     }
-  }, [isAuthenticated, user, router]);
+  }, [hydrated, isAuthenticated, user, router]);
 
   const filtered = useMemo(() => {
     return myReferrals.filter(r => {
@@ -54,6 +55,10 @@ export default function DashboardPage() {
   }), [myReferrals]);
 
   // Early return UI AFTER hooks
+  if (!hydrated) {
+    return null;
+  }
+
   if (!isAuthenticated || user?.role === 'ADMIN' || user?.role === 'HR') {
     return null;
   }
